@@ -46,95 +46,99 @@
 
 <h2>1. Self-Learning Self-Improving Cycle</h2>
 
-<svg viewBox="0 0 900 700" style="max-width:900px; margin:24px auto; display:block;" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="900" height="700" rx="12" fill="#161b22" stroke="#30363d"/>
-  <text x="450" y="30" text-anchor="middle" fill="#58a6ff" font-size="16" font-weight="bold" font-family="sans-serif">THE CYCLE THAT LEARNS</text>
-
-  <!-- Cycle nodes (clockwise from top) -->
-  <!-- ROUTE -->
-  <rect x="300" y="50" width="300" height="80" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
-  <text x="450" y="72" text-anchor="middle" fill="#3fb950" font-size="14" font-weight="bold" font-family="sans-serif">ROUTE</text>
-  <text x="450" y="90" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">SemanticRouter (8/10) + sona boost</text>
-  <text x="450" y="105" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">@ruvector/router + sona NAPI + ONNX 384d</text>
-  <text x="450" y="120" text-anchor="middle" fill="#3fb950" font-size="10" font-family="sans-serif">Quality: real confidence, modelRoute set</text>
-
-  <!-- Arrow: ROUTE → EXECUTE -->
-  <path d="M 600 90 Q 720 90 720 200" fill="none" stroke="#3fb950" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="680" y="150" fill="#8b949e" font-size="9" font-family="sans-serif">setTrajectoryRoute</text>
-
-  <!-- EXECUTE -->
-  <rect x="600" y="190" width="260" height="80" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
-  <text x="730" y="212" text-anchor="middle" fill="#3fb950" font-size="14" font-weight="bold" font-family="sans-serif">EXECUTE</text>
-  <text x="730" y="230" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">Agent works (Edit, Bash, etc.)</text>
-  <text x="730" y="245" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">hook-handler.cjs tracks steps</text>
-  <text x="730" y="260" text-anchor="middle" fill="#3fb950" font-size="10" font-family="sans-serif">Quality: gradient (1 - fails/steps)</text>
-
-  <!-- Arrow: EXECUTE → JUDGE -->
-  <path d="M 730 270 Q 730 310 730 330" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="745" y="305" fill="#8b949e" font-size="9" font-family="sans-serif">add_step(reward)</text>
-
-  <!-- JUDGE -->
-  <rect x="600" y="330" width="260" height="80" rx="10" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
-  <text x="730" y="352" text-anchor="middle" fill="#58a6ff" font-size="14" font-weight="bold" font-family="sans-serif">JUDGE</text>
-  <text x="730" y="370" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">VerdictAnalyzer (root cause + lessons)</text>
-  <text x="730" y="385" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">@ruvector/ruvllm-native (Rust, 5.2MB)</text>
-  <text x="730" y="400" text-anchor="middle" fill="#3fb950" font-size="10" font-family="sans-serif">Quality: nuanced (success + failure)</text>
-
-  <!-- Arrow: JUDGE → LEARN -->
-  <path d="M 600 410 Q 450 450 450 470" fill="none" stroke="#d29922" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="510" y="445" fill="#8b949e" font-size="9" font-family="sans-serif">endTrajectory(quality)</text>
-
-  <!-- LEARN -->
-  <rect x="250" y="470" width="400" height="110" rx="10" fill="#0d1117" stroke="#d29922" stroke-width="2"/>
-  <text x="450" y="492" text-anchor="middle" fill="#d29922" font-size="14" font-weight="bold" font-family="sans-serif">LEARN (SonaEngine 3 Loops)</text>
-  <text x="450" y="512" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">Loop A: MicroLoRA (instant, &lt;1ms) → weight delta</text>
-  <text x="450" y="528" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">Loop B: k-means → patterns → BaseLoRA gradients</text>
-  <text x="450" y="544" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">Loop C: EWC++ (anti-forgetting across sessions)</text>
-  <text x="450" y="560" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">@ruvector/sona NAPI (vendor rebuild)</text>
-  <text x="450" y="572" text-anchor="middle" fill="#3fb950" font-size="10" font-family="sans-serif">Quality: modelRoute + avgQuality from Rust k-means</text>
-
-  <!-- Arrow: LEARN → PERSIST -->
-  <path d="M 250 530 Q 130 530 130 450" fill="none" stroke="#d2a8ff" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="110" y="495" fill="#8b949e" font-size="9" font-family="sans-serif" transform="rotate(-90,110,495)">saveState + export</text>
-
-  <!-- PERSIST -->
-  <rect x="40" y="330" width="220" height="110" rx="10" fill="#0d1117" stroke="#d2a8ff" stroke-width="2"/>
-  <text x="150" y="352" text-anchor="middle" fill="#d2a8ff" font-size="14" font-weight="bold" font-family="sans-serif">PERSIST (5 layers)</text>
-  <text x="150" y="372" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">sona state (LoRA + patterns)</text>
-  <text x="150" y="386" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">reasoningBank (verdicts)</text>
-  <text x="150" y="400" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">SQLite (C4 episodic)</text>
-  <text x="150" y="414" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">TensorCompress + intel.json</text>
-  <text x="150" y="430" text-anchor="middle" fill="#3fb950" font-size="10" font-family="sans-serif">Quality: all survive restart</text>
-
-  <!-- Arrow: PERSIST → RETRIEVE (the CYCLE closes here) -->
-  <path d="M 150 330 Q 150 250 150 200" fill="none" stroke="#3fb950" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="115" y="265" fill="#8b949e" font-size="9" font-family="sans-serif" transform="rotate(-90,115,265)">loadState + import</text>
-
-  <!-- RETRIEVE (connects back to ROUTE) -->
-  <rect x="40" y="120" width="220" height="80" rx="10" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
-  <text x="150" y="142" text-anchor="middle" fill="#3fb950" font-size="14" font-weight="bold" font-family="sans-serif">RETRIEVE + BOOST</text>
-  <text x="150" y="160" text-anchor="middle" fill="#c9d1d9" font-size="11" font-family="sans-serif">findPatterns → modelRoute + quality</text>
-  <text x="150" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">q ≥ 0.5 → boost agent (+0.05)</text>
-  <text x="150" y="188" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">q &lt; 0.5 → penalize agent (-0.05)</text>
-
-  <!-- Arrow: RETRIEVE → ROUTE (closing the cycle!) -->
-  <path d="M 260 160 Q 280 130 300 90" fill="none" stroke="#3fb950" stroke-width="2.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
-  <text x="265" y="110" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">IMPROVES</text>
-
-  <!-- Arrow marker -->
+<svg viewBox="0 0 800 800" style="max-width:800px; margin:24px auto; display:block;" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" rx="12" fill="#161b22" stroke="#30363d"/>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b949e"/>
-    </marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#58a6ff"/></marker>
+    <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3fb950"/></marker>
   </defs>
 
-  <!-- Degradation chain (bottom) -->
-  <text x="450" y="620" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold" font-family="sans-serif">DEGRADATION CHAIN</text>
-  <text x="450" y="640" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">Full: SR + sona + rbank + VA → 8/10</text>
-  <text x="450" y="656" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">-rbank: SR + sona → 7/10 | -sona: SR alone → 8/10</text>
-  <text x="450" y="672" text-anchor="middle" fill="#d29922" font-size="11" font-family="sans-serif">-SR: cosine → 7/10 | -ONNX: hash → 3/10</text>
-  <text x="450" y="688" text-anchor="middle" fill="#f85149" font-size="11" font-family="sans-serif">-daemon: pass-through (hooks only, no learning)</text>
+  <!-- Title + center metric -->
+  <text x="400" y="32" text-anchor="middle" fill="#58a6ff" font-size="16" font-weight="bold" font-family="sans-serif">SELF-LEARNING SELF-IMPROVING CYCLE</text>
+  <circle cx="400" cy="340" r="70" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+  <text x="400" y="325" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="sans-serif">each cycle</text>
+  <text x="400" y="348" text-anchor="middle" fill="#3fb950" font-size="22" font-weight="bold" font-family="sans-serif">7→8/10</text>
+  <text x="400" y="365" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">routing accuracy</text>
+
+  <!-- ═══ 6 NODES in hexagonal layout ═══ -->
+
+  <!-- 1. ROUTE (top center) -->
+  <rect x="270" y="55" width="260" height="75" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="400" y="75" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="bold" font-family="sans-serif">1. ROUTE</text>
+  <text x="400" y="92" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">SemanticRouter (8/10) + sona pattern boost</text>
+  <text x="400" y="106" text-anchor="middle" fill="#8b949e" font-size="9" font-family="sans-serif">@ruvector/router + sona NAPI + ONNX 384d</text>
+  <text x="400" y="120" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ real confidence, modelRoute recorded</text>
+
+  <!-- 2. EXECUTE (top right) -->
+  <rect x="570" y="180" width="210" height="75" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="675" y="200" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="bold" font-family="sans-serif">2. EXECUTE</text>
+  <text x="675" y="217" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">Agent works (Edit, Bash...)</text>
+  <text x="675" y="231" text-anchor="middle" fill="#8b949e" font-size="9" font-family="sans-serif">hook-handler.cjs tracks steps</text>
+  <text x="675" y="245" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ gradient quality (1-fails/steps)</text>
+
+  <!-- 3. JUDGE (bottom right) -->
+  <rect x="570" y="400" width="210" height="75" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+  <text x="675" y="420" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="bold" font-family="sans-serif">3. JUDGE</text>
+  <text x="675" y="437" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">VerdictAnalyzer (Rust NAPI)</text>
+  <text x="675" y="451" text-anchor="middle" fill="#8b949e" font-size="9" font-family="sans-serif">@ruvector/ruvllm-native (5.2MB)</text>
+  <text x="675" y="465" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ root cause + lessons (success+fail)</text>
+
+  <!-- 4. LEARN (bottom center) -->
+  <rect x="250" y="530" width="300" height="95" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="400" y="550" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="bold" font-family="sans-serif">4. LEARN (SonaEngine)</text>
+  <text x="400" y="567" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">Loop A: MicroLoRA (&lt;1ms instant weight delta)</text>
+  <text x="400" y="581" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">Loop B: k-means → patterns → BaseLoRA gradients</text>
+  <text x="400" y="595" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">Loop C: EWC++ (anti-forgetting across sessions)</text>
+  <text x="400" y="612" text-anchor="middle" fill="#8b949e" font-size="9" font-family="sans-serif">@ruvector/sona NAPI (vendor rebuild)</text>
+  <text x="400" y="622" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ modelRoute + avgQuality from Rust k-means</text>
+
+  <!-- 5. PERSIST (bottom left) -->
+  <rect x="20" y="400" width="210" height="75" rx="8" fill="#0d1117" stroke="#d2a8ff" stroke-width="2"/>
+  <text x="125" y="420" text-anchor="middle" fill="#d2a8ff" font-size="13" font-weight="bold" font-family="sans-serif">5. PERSIST</text>
+  <text x="125" y="437" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">sona + rbank + SQLite + TC + intel</text>
+  <text x="125" y="451" text-anchor="middle" fill="#8b949e" font-size="9" font-family="sans-serif">5 layers, all cross-session</text>
+  <text x="125" y="465" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ all survive daemon restart</text>
+
+  <!-- 6. RETRIEVE (top left) — closes the cycle -->
+  <rect x="20" y="180" width="210" height="75" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="125" y="200" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="bold" font-family="sans-serif">6. RETRIEVE + BOOST</text>
+  <text x="125" y="217" text-anchor="middle" fill="#c9d1d9" font-size="10" font-family="sans-serif">findPatterns → modelRoute + quality</text>
+  <text x="125" y="231" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">q≥0.5 boost +0.05 | q&lt;0.5 penalize -0.05</text>
+  <text x="125" y="245" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ corrects routing cross-session</text>
+
+  <!-- ═══ ARROWS (clockwise) ═══ -->
+  <!-- 1→2: ROUTE → EXECUTE -->
+  <path d="M530 95 Q600 120 600 180" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="575" y="140" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
+
+  <!-- 2→3: EXECUTE → JUDGE -->
+  <path d="M675 255 L675 400" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="690" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">add_step</text>
+
+  <!-- 3→4: JUDGE → LEARN -->
+  <path d="M570 460 Q500 510 500 530" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="540" y="500" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
+
+  <!-- 4→5: LEARN → PERSIST -->
+  <path d="M250 575 Q180 540 180 475" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="195" y="520" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
+
+  <!-- 5→6: PERSIST → RETRIEVE -->
+  <path d="M125 400 L125 255" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="100" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">load</text>
+
+  <!-- 6→1: RETRIEVE → ROUTE (THE IMPROVEMENT ARROW) -->
+  <path d="M230 200 Q300 130 300 95" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="240" y="135" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES ↑</text>
+
+  <!-- ═══ DEGRADATION (bottom) ═══ -->
+  <rect x="100" y="660" width="600" height="120" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <text x="400" y="682" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold" font-family="sans-serif">GRACEFUL DEGRADATION</text>
+  <text x="400" y="702" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">Full stack: SR + sona + rbank + VA → 8/10 (after learning)</text>
+  <text x="400" y="718" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">Without rbank: SR + sona → 7/10 | Without sona: SR alone → 8/10</text>
+  <text x="400" y="734" text-anchor="middle" fill="#d29922" font-size="11" font-family="sans-serif">Without SR: cosine → 7/10 | Without ONNX: hash → 3/10</text>
+  <text x="400" y="750" text-anchor="middle" fill="#f85149" font-size="11" font-family="sans-serif">Without daemon: pass-through (hooks only, no learning)</text>
+  <text x="400" y="770" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">System never crashes — always degrades to a simpler working mode</text>
 </svg>
 
 <h2>2. Learning Pipeline (detail)</h2>
