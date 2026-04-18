@@ -44,7 +44,93 @@
   Stable 7/10 baseline ready to evolve with live usage. Every layer has graceful degradation.
 </div>
 
-<h2>1. Learning Pipeline</h2>
+<h2>1. Self-Learning Self-Improving Cycle</h2>
+
+<div style="background:#161b22; border:1px solid #30363d; border-radius:8px; padding:24px; margin:18px 0; font-family:monospace; font-size:0.85em; line-height:1.7;">
+<div style="text-align:center; color:#58a6ff; font-size:1.2em; margin-bottom:16px;">THE LOOP THAT LEARNS</div>
+<pre style="border:none; padding:0; background:transparent; color:#c9d1d9;">
+                    ┌─────────────────────────────────────────────┐
+                    │           USER PROMPT (stdin)                │
+                    │         "fix auth vulnerability"             │
+                    └──────────────┬──────────────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="good">ROUTE</span>  SemanticRouter (8/10)                 │
+                    │  + SonaEngine pattern boost/penalize         │
+                    │  → agent: security-architect (63%)           │
+                    │  <span style="color:#8b949e">Uses: @ruvector/router, sona NAPI, ONNX 384d</span> │
+                    │  <span style="color:#8b949e">Quality: ✅ real confidence, not hardcoded</span>    │
+                    └──────────────┬──────────────────────────────┘
+                                   │ setTrajectoryRoute(agent)
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="good">EXECUTE</span>  Agent works (Edit, Bash, etc.)      │
+                    │  Steps recorded: reward per tool use         │
+                    │  <span style="color:#8b949e">Uses: hook-handler.cjs tracks fails/steps</span>   │
+                    │  <span style="color:#8b949e">Quality: ✅ gradient (1-fails/steps)</span>          │
+                    └──────────────┬──────────────────────────────┘
+                                   │ add_step(text, reward)
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="info">JUDGE</span>  VerdictAnalyzer (ruvllm NAPI)         │
+                    │  → ErrorRecovery: factors, lessons, improve  │
+                    │  → ToolUse: "Successful pattern: X → Y → Z" │
+                    │  <span style="color:#8b949e">Uses: @ruvector/ruvllm-native (Rust, 5.2MB)</span>  │
+                    │  <span style="color:#8b949e">Quality: ✅ nuanced (not binary 0.8/0.2)</span>     │
+                    └──────────────┬──────────────────────────────┘
+                                   │ endTrajectory(quality)
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="warn">LEARN</span>  SonaEngine 3 Loops (Rust NAPI)        │
+                    │                                              │
+                    │  Loop A: MicroLoRA (&lt;1ms, instant)          │
+                    │    → weight delta on routing embeddings      │
+                    │                                              │
+                    │  Loop B: k-means → BaseLoRA (tick/forceLearn)│
+                    │    → clusters trajectories → patterns        │
+                    │    → each pattern carries modelRoute + quality│
+                    │    → gradients update routing weights         │
+                    │                                              │
+                    │  Loop C: EWC++ (session_end)                 │
+                    │    → Fisher matrix locks important weights   │
+                    │    → prevents forgetting across sessions     │
+                    │                                              │
+                    │  <span style="color:#8b949e">Uses: @ruvector/sona NAPI (vendor rebuild)</span>   │
+                    │  <span style="color:#8b949e">Quality: ✅ modelRoute from Rust k-means</span>     │
+                    └──────────────┬──────────────────────────────┘
+                                   │ saveState + exportPatterns
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="good">PERSIST</span>  5 layers cross-session              │
+                    │  ├── sona state (patterns + LoRA weights)    │
+                    │  ├── reasoningBank (VerdictAnalysis patterns) │
+                    │  ├── SQLite (C4 episodic trajectories)       │
+                    │  ├── TensorCompress (compressed tensors)     │
+                    │  └── intelligence.json (pretrain Q-learning) │
+                    │  <span style="color:#8b949e">Quality: ✅ all survive daemon restart</span>       │
+                    └──────────────┬──────────────────────────────┘
+                                   │ loadState + importPatterns
+                    ┌──────────────▼──────────────────────────────┐
+                    │  <span class="good">NEXT SESSION</span>  Patterns restored             │
+                    │  findPatterns() → modelRoute + avgQuality    │
+                    │  quality ≥ 0.5 → BOOST agent (+0.05)         │
+                    │  quality &lt; 0.5 → PENALIZE agent (-0.05)     │
+                    │  → ROUTING CHANGES based on past quality     │
+                    │  <span style="color:#8b949e">Quality: ✅ verified: wrong routes corrected</span> │
+                    └──────────────┬──────────────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │      NEXT USER PROMPT       │
+                    │   (better routing this time) │
+                    └─────────────────────────────┘
+
+<span style="color:#58a6ff">DEGRADATION CHAIN:</span>
+<span class="good">Full</span>: SR + sona + rbank + VA → 8/10 after learning
+<span class="good">-rbank</span>: SR + sona            → ~7/10
+<span class="good">-sona</span>: SemanticRouter alone  → 8/10 base
+<span class="warn">-SR</span>:   Cosine patterns       → 7/10
+<span class="bad">-ONNX</span>: Hash fallback          → ~3/10
+<span class="bad">-daemon</span>: Pass-through         → hooks only, no learning
+</pre>
+</div>
+
+<h2>2. Learning Pipeline (detail)</h2>
 
 <pre>
 Claude Code Hook Event (stdin JSON)
