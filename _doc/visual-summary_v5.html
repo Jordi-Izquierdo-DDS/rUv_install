@@ -133,34 +133,33 @@
   <text x="100" y="338" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">5 layers · cross-session</text>
 
   <!-- GAP: REFINE (top-left, 315°) — Phase 8, deferred ADR-004 -->
-  <rect x="20" y="130" width="190" height="45" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="115" y="150" text-anchor="middle" fill="#8b949e" font-size="11" font-family="sans-serif">REFINE (mincut/GNN)</text>
-  <text x="115" y="165" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">deferred · ADR-004</text>
+  <rect x="20" y="175" width="160" height="38" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="100" y="193" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">REFINE (mincut/GNN)</text>
+  <text x="100" y="206" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">deferred · ADR-004</text>
 
-  <!-- ═══ ARROWS: outer arcs connecting node edges, routed OUTSIDE the Venn center ═══ -->
-  <!-- Each arc bulges outward (larger radius) so arrows don't cross the center Venn -->
+  <!-- ═══ ARROWS: outer curves, each bulging AWAY from center ═══ -->
 
-  <!-- 1→2: CAPTURE bottom-right → RETRIEVE top-left -->
-  <path d="M 490 108 C 570 108 590 120 590 140" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 1→2: CAPTURE right-edge → RETRIEVE top-edge (curves outward top-right) -->
+  <path d="M 490 79 C 590 50 650 80 680 130" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 2→3: RETRIEVE bottom → ROUTE top (right side, goes outside) -->
-  <path d="M 780 188 C 800 230 800 270 790 290" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 2→3: RETRIEVE right-edge → ROUTE right-edge (curves outward right) -->
+  <path d="M 780 159 C 810 220 810 260 790 290" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 3→4: ROUTE bottom → EXECUTE top (right side) -->
-  <path d="M 790 348 C 800 380 800 430 780 450" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 3→4: ROUTE right-edge → EXECUTE right-edge (curves outward right) -->
+  <path d="M 790 348 C 810 390 810 430 780 450" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 4→5: EXECUTE bottom-left → JUDGE top-right -->
-  <path d="M 590 508 C 570 540 510 560 490 568" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 4→5: EXECUTE bottom-edge → JUDGE right-edge (curves outward bottom-right) -->
+  <path d="M 685 508 C 660 560 550 600 490 589" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 5→6: JUDGE left → LEARN right (bottom, goes outside) -->
-  <path d="M 310 600 C 270 630 230 630 210 522" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 5→6: JUDGE left-edge → LEARN bottom-edge (curves outward bottom-left) -->
+  <path d="M 310 589 C 240 620 150 600 115 522" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 6→7: LEARN top → PERSIST bottom (left side, goes outside) -->
-  <path d="M 20 450 C 0 420 0 370 10 348" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 6→7: LEARN left-edge → PERSIST left-edge (curves outward left) -->
+  <path d="M 20 486 C -10 440 -10 380 10 348" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 7→1: PERSIST top → through REFINE gap → CAPTURE left (THE IMPROVEMENT ARC) -->
-  <path d="M 100 290 C 80 220 120 120 310 79" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="155" y="160" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+  <!-- 7→1: PERSIST top-edge → CAPTURE left-edge (IMPROVEMENT — the big arc over top-left) -->
+  <path d="M 100 290 C 60 180 160 60 310 66" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="90" y="140" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
