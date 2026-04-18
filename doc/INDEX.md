@@ -1,19 +1,39 @@
-# Doc index
+# Doc index — ruflo v5
 
-## Our decisions
+## v5 key docs (start here)
 
-- [ADR-000 — DDD + Component-Selection Protocol](adr/000-DDD.md) — **START HERE**; base record + authoritative sources + standing rules
-- [ADR-ruflo-001 — RVF adoption deferred](adr/001-memory-graceful-degradation.md)
-- [ADR-ruflo-002 — Local ruvector_brain path-dep **RESOLVED**](adr/002-ruvector-brain-deferred.md) (use published `@ruvector/*`)
+- [README.md](../README.md) — v5 overview, architecture, audit results
+- [TODO-v5.md](TODO-v5.md) — honest next steps with priorities
+- [visual-summary_v5.html](../_doc/visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
 
-## Reference (immutable snapshots)
+## Fixes (v5 session, 2026-04-17/18)
+
+- [Fix 16 — HNSW vector search](fixes/16_hnsw-vector-search-fix.md) — built, tested, removed (superseded by Fix 17)
+- [Fix 17 — Self-learning loop closure](fixes/17_self-learning-loop-closure.md) — model_route NAPI + quality-aware boost
+- [Fix 18 — ruvllm NAPI: VerdictAnalyzer](fixes/18_ruvllm-napi-verdictanalyzer.md) — new vendor binary, root cause analysis
+
+## Audits (v5)
+
+- [20260418 Final audit](audit/20260418_audit_v5_final.md) — S1:7/10 S2:7/10, all services wired
+- [20260418 Clean install](audit/20260418_audit_v5_clean_install.md) — nuke + bootstrap verification
+- [20260418 Fix 16-18](audit/20260418_audit_v5_fix16_17_18_final.md) — improvement +3 (now corrected to stable)
+
+## ADRs
+
+- [ADR-000 — DDD + Component-Selection Protocol](adr/000-DDD.md) — base record + §3.4 phase table
+- [ADR-001 — Memory graceful degradation](adr/001-memory-graceful-degradation.md) — C4 chain
+- [ADR-002 — Local ruvector_brain **RESOLVED**](adr/002-ruvector-brain-deferred.md)
+- [ADR-004 — MinCut deferred](adr/004-mincut-integration-deferred.md) — REFINE gap in cycle
+- [ADR-005 — v4 alpha published-npm-only](adr/005-v4-alpha-published-npm-only.md) — + §7 vendor carve-out
+
+## Reference (immutable upstream snapshots)
 
 ### Master guide
-- [foxref-architecture-guide.md](reference/foxref-architecture-guide.md) — complete foxRef × gitnexus × π-brain cross-reference across all 5 phases; **start here**
+- [foxref-architecture-guide.md](reference/foxref-architecture-guide.md) — foxRef × gitnexus × π-brain cross-reference
 
 ### Supporting
-- [ruvector-crate-mapping.md](reference/ruvector-crate-mapping.md) — per-crate ownership, file:line grounded
-- [visual-summary_Phase3_proposal.html](reference/visual-summary_Phase3_proposal.html) — learning-cycle aligned hook flow viz
+- [ruvector-crate-mapping.md](reference/ruvector-crate-mapping.md) — per-crate ownership
+- [visual-summary_v5.html](../_doc/visual-summary_v5.html) — v5 cycle diagram (replaces v4 Phase3 proposal)
 
 ### Upstream foxRef (source of truth)
 - [ADR-078-ruflo-v3.5.51-ruvector-integration.md](reference/foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md) — the integration ADR

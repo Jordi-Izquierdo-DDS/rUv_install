@@ -1,4 +1,7 @@
-# ruflo v4 — TODO checklist
+# ruflo v4 → v5 — TODO checklist (SUPERSEDED)
+
+> **This file is from v4.** The current TODO is at [`doc/TODO-v5.md`](../doc/TODO-v5.md).
+> v4 checklist below kept for historical reference only.
 
 > Checklist pura arriba; detalles abajo para que la próxima sesión pueda reanudar.
 > Honesto: incluyo lo hecho, lo en progreso, y lo que sé que falta.

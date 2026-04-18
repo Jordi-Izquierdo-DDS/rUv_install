@@ -1,11 +1,16 @@
-# Doc index
+# Doc index — ruflo v5 (operator docs)
 
-## Quick-start — current state overview
+## Quick-start — current state
 
-- **[visual-summary_v4.html](visual-summary_v4.html)** — scan-in-3-min dashboard · KPIs · 14-phase status · DQ log · **Tiered adoption plan** (Tier 1 ADOPT NOW · Tier 2 USE as EXTENSIONS · Tier 3 ABLATE · Tier 4 SKIP)
-- **[analysis/20260415_ruvector_usage_analysis_v2.md](analysis/20260415_ruvector_usage_analysis_v2.md)** — master analysis (11 sections); hive investigation output; per-export verdict
-- **[zz_pulse_check/20260415_1320_pulse_check_v2.md](zz_pulse_check/20260415_1320_pulse_check_v2.md)** — §2 5-layer complete for DQ-03 + A/B/C decision framework
-- **[TODO.md](TODO.md)** — active checklist, Next-session ordering
+- **[visual-summary_v5.html](visual-summary_v5.html)** — v5 cycle diagram + Venn (Quality×Coverage×Persistence) + degradation table
+- **[../doc/TODO-v5.md](../doc/TODO-v5.md)** — honest next steps
+- **[../README.md](../README.md)** — v5 overview, architecture, audit results
+
+## v4 historical (kept for reference)
+
+- [visual-summary_v4.html](visual-summary_v4.html) — v4 dashboard (superseded by v5)
+- [analysis/20260415_ruvector_usage_analysis_v2.md](analysis/20260415_ruvector_usage_analysis_v2.md) — master analysis (still valid)
+- [TODO.md](TODO.md) — v4 checklist (superseded by TODO-v5.md)
 
 ## Analysis archive
 

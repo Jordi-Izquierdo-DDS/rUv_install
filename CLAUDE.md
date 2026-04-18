@@ -1,12 +1,33 @@
-# Claude Code Configuration — ruflo v4 bootstrap
+# Claude Code Configuration — ruflo v5 bootstrap
 
-> **Identity:** v4 is a **thin adapter** over published `@ruvector/*` + `@claude-flow/memory` npm packages. No Cargo path-deps, no patch chain, no sentinels. Every self-learning concern lives upstream; ruflo is the hook-layer glue. **Narrow exception (2026-04-15):** pre-built NAPI overlays under `vendor/` are permitted for empirically-justified NAPI-surface-gap closures (see ADR-002 amendment + ADR-005 §7).
+> **Identity:** v5 is the **first 100% version** — all foxref learning loops wired, VerdictAnalyzer from Rust, SemanticRouter for routing. Two vendor NAPI rebuilds (sona + ruvllm) ship the full Rust learning pipeline to JS. Pretrain via upstream Q-learning. 960 LOC total.
 
 ---
 
-## 🧭 Sprint state — READ THIS FIRST (snapshot 2026-04-15)
+## 🧭 Sprint state — READ THIS FIRST (2026-04-18)
 
-**Before asking what to do next, read — in this order — the four files listed below.** They are the source of truth; this snapshot is a summary pointer so you don't start blind.
+**Start here:**
+1. **`README.md`** — v5 overview, architecture, audit results, vendor structure
+2. **`doc/TODO-v5.md`** — honest next steps with priorities
+3. **`_doc/visual-summary_v5.html`** — interactive cycle diagram (open in browser)
+4. **`doc/audit/20260418_audit_v5_final.md`** — latest e2e audit
+
+**Key changes from v4:**
+- SemanticRouter (8/10 base routing) replaces cosine-only (7/10)
+- VerdictAnalyzer (ruvllm NAPI, 5.2MB) provides root cause + lessons
+- model_route in sona patterns (Rust rebuild) enables quality-aware learning
+- TensorCompress wired (Phase 10 CONSOLIDATE)
+- Pretrain: upstream Q-learning → sona bridge (standalone script)
+- handler calls route() in UserPromptSubmit (was missing in v4)
+- Gradient quality (1-fails/steps) replaces binary 0.8/0.2
+
+> **v4 docs below are kept for reference.** The authoritative state is in the files above.
+
+---
+
+## v4 reference (historical — kept for context)
+
+**Before asking what to do next, read the v5 docs above, not the v4 snapshot below.**
 
 > **Path convention:** operator-maintained authoritative docs and memories live in `_doc/` and `_memory/` (underscore prefix — **survives installer overwrites**). The `doc/` and `memory/` dirs are installer-template stubs rsynced fresh on every `bootstrap.sh --target` run. Always read from `_doc/` / `_memory/` for current state.
 
