@@ -143,17 +143,19 @@
   <!-- Visible guide circle (faint) -->
   <circle cx="400" cy="370" r="290" fill="none" stroke="#30363d" stroke-width="1" stroke-dasharray="2,4"/>
 
-  <!-- Lines shortened by ~6px at end so arrowhead lands on node border -->
-  <!-- 1→2 --><line x1="490" y1="90" x2="596" y2="148" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <!-- 2→3 --><line x1="780" y1="182" x2="786" y2="293" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <!-- 3→4 --><line x1="786" y1="348" x2="780" y2="453" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <!-- 4→5 --><line x1="596" y1="500" x2="490" y2="572" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <!-- 5→6 --><line x1="310" y1="586" x2="210" y2="516" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <!-- 6→7 --><line x1="24" y1="455" x2="16" y2="350" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- ALL arrows follow the guide circle r=310 centered at (400,370) -->
+  <!-- SVG A command: A rx ry x-rot large-arc sweep endX endY -->
 
-  <!-- 7→1: IMPROVES (same straight style as others, dashed green) -->
-  <line x1="55" y1="290" x2="316" y2="76" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="130" y="155" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+  <!-- 1→2 --><path d="M 490 90 A 310 310 0 0 1 596 148" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 2→3 --><path d="M 780 182 A 310 310 0 0 1 786 293" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 3→4 --><path d="M 786 348 A 310 310 0 0 1 780 453" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 4→5 --><path d="M 596 500 A 310 310 0 0 1 490 572" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 5→6 --><path d="M 310 586 A 310 310 0 0 1 210 516" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 6→7 --><path d="M 24 455 A 310 310 0 0 1 16 350" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- 7→1: IMPROVES (same arc, green dashed) -->
+  <path d="M 55 290 A 310 310 0 0 1 316 76" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="110" y="135" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
