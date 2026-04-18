@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ruflo v4 — Current State + Adoption Plan (2026-04-15 PM)</title>
+<style>
+  body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1400px; margin: 0 auto; padding: 24px; line-height: 1.55; }
+  h1 { color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 36px; border-bottom: 1px solid #30363d; padding-bottom: 6px; }
+  h3 { color: #d2a8ff; margin-top: 22px; }
+  h4 { color: #7ee787; margin-top: 18px; }
+  code { background: #161b22; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; color: #79c0ff; }
+  pre  { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; overflow-x: auto; font-size: 0.86em; line-height: 1.45; }
+  pre code { background: transparent; padding: 0; }
+  .subtitle { color: #8b949e; font-size: 0.92em; margin-top: -8px; }
+  .tldr { background: #161b22; border: 1px solid #30363d; border-left: 4px solid #58a6ff; border-radius: 6px; padding: 14px 18px; margin: 18px 0; }
+  .tldr strong { color: #58a6ff; }
+  .critical { background: #f8514922; border-left-color: #f85149 !important; }
+  .highlight { background: #58a6ff22; padding: 1px 4px; border-radius: 3px; }
+  .good   { color: #3fb950; }
+  .warn   { color: #d29922; }
+  .bad    { color: #f85149; }
+  .muted  { color: #8b949e; }
+  .accent { color: #d2a8ff; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.87em; }
+  th, td { border: 1px solid #30363d; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #161b22; color: #79c0ff; font-weight: 600; }
+  tr:nth-child(even) td { background: #0d1117; }
+  tr:nth-child(odd)  td { background: #12171e; }
+  .cb { font-family: monospace; font-size: 1.08em; font-weight: 700; }
+  .cb-ok      { color: #3fb950; }
+  .cb-partial { color: #d29922; }
+  .cb-no      { color: #f85149; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+  .kpi { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; }
+  .kpi-value { color: #3fb950; font-size: 1.4em; font-weight: 700; font-family: monospace; }
+  .kpi-label { color: #8b949e; font-size: 0.82em; margin-top: 2px; }
+  .tier { background: #161b22; border: 1px solid #30363d; border-left: 4px solid; border-radius: 6px; padding: 14px 18px; margin: 10px 0; }
+  .tier h3 { margin-top: 0; }
+  .tier-1 { border-left-color: #3fb950; }
+  .tier-2 { border-left-color: #7ee787; }
+  .tier-3 { border-left-color: #d29922; }
+  .tier-4 { border-left-color: #8b949e; }
+  .rule-box { background: #58a6ff11; border: 1px solid #58a6ff44; border-radius: 6px; padding: 12px 16px; margin: 16px 0; }
+  .rule-box strong { color: #58a6ff; }
+  .link { color: #58a6ff; text-decoration: none; }
+  .link:hover { text-decoration: underline; }
+  .footer-note { font-size: 0.82em; color: #8b949e; margin-top: 36px; padding-top: 14px; border-top: 1px solid #30363d; }
+  .layer-diagram { background: #0d1a2d; border: 1px solid #30363d; border-radius: 6px; padding: 14px; font-family: monospace; font-size: 0.82em; color: #c9d1d9; white-space: pre; overflow-x: auto; margin: 12px 0; line-height: 1.5; }
+  .pkg { background: #21262d; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 0.85em; color: #79c0ff; display: inline-block; }
+  .pkg.sona { color: #3fb950; background: #3fb95022; border: 1px solid #3fb95044; }
+  .pkg.ruvllm { color: #f0883e; background: #f0883e22; border: 1px solid #f0883e44; }
+  .pkg.ruvector { color: #bc8cff; background: #bc8cff22; border: 1px solid #bc8cff44; }
+  .pkg.ruflo { color: #d2a8ff; background: #d2a8ff22; border: 1px solid #d2a8ff44; }
+  .pkg.cf { color: #e3b341; background: #e3b34122; border: 1px solid #e3b34144; }
+  .verdict-use { color: #3fb950; font-weight: 700; }
+  .verdict-defer { color: #d29922; font-weight: 700; }
+  .verdict-skip { color: #8b949e; font-weight: 700; }
+  .verdict-tran { color: #79c0ff; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>ruflo v4 — Current State + Tiered Adoption Plan</h1>
+<p class="subtitle">Generated 2026-04-15 late-PM · <strong style="color:#3fb950;">Tier 1 + Tier 2 IMPLEMENTED</strong> (Phase 0 hygiene + Phase 1+2+3 big-bang per <a class="link" href="plan/20260415_tier1_2_adoption_plan.md">plan</a>). Supersedes earlier v4 versions.</p>
+
+<div class="tldr" style="border-left-color:#3fb950;">
+<strong style="color:#3fb950;">✅ Status update:</strong> Phase 0 (ADR-008 cap raise 850→1200, dropped <code>@ruvector/ruvllm</code> stub, added explicit <code>@ruvector/core</code>+<code>@ruvector/attention</code>) and Phase 1+2+3 (2 new daemon services <code>intelligence</code>+<code>substrate</code>, Tier 2 inline <code>classifyChange</code>+<code>analyze_file</code>+coherence observe/report wiring) are <strong>LIVE</strong>. <strong>26/26 verify gates</strong>. LOC <strong>860/1200</strong> (29% margin). Smoke-verified: <code>substrate.coherence.report()</code> emits 5 scoring fields + anomalies; <code>analyze_file</code> IPC returns ASTParser+extractAllPatterns output. ADR-007 DB persistence preserved. Next: dogfood at scale → re-pulse v3 after N≥5 real Claude sessions. Phase 4+ deferred (pi-brain share, Tier 3 ablations, Phase 7 ruvector-postgres scoping).
+</div>
+
+<div class="rule-box">
+<strong>Operating rule</strong> (two-sided, codified 2026-04-15 in <code>_memory/feedback_upstream_trust_no_invention.md</code>):
+<ol>
+  <li><strong>Never invent</strong> — no formulas, aggregations, hidden wrappers, confidence transformations. Pass upstream what it wants, trust returned results, neutral fallback only. Hidden rebuild wrappers count as invention too.</li>
+  <li><strong>Use liberally</strong> — adopt upstream exports when they improve signal quality. Reject only if: (a) redundant with existing capability, (b) provably unrelated domain, (c) internal primitive composed by a higher-level export.</li>
+</ol>
+</div>
+
+<h2>§0 · KPIs (post-Tier 1+2 implementation)</h2>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-value">26/26</div><div class="kpi-label">verify.sh gates ✓</div></div>
+  <div class="kpi"><div class="kpi-value">860/1200</div><div class="kpi-label">helper LOC (29% margin, ADR-008)</div></div>
+  <div class="kpi"><div class="kpi-value">12 ☑ · 0 ◐ · 2 ☐</div><div class="kpi-label">14-phase plumbing</div></div>
+  <div class="kpi"><div class="kpi-value">6</div><div class="kpi-label">DQ observations catalogued</div></div>
+  <div class="kpi"><div class="kpi-value">~6 / 170+</div><div class="kpi-label">ruvector exports used (was ~2)</div></div>
+  <div class="kpi"><div class="kpi-value">4</div><div class="kpi-label">daemon services (was 3 → +intelligence +substrate)</div></div>
+  <div class="kpi"><div class="kpi-value">14 ms</div><div class="kpi-label">hook p50 warm latency</div></div>
+  <div class="kpi"><div class="kpi-value">720 KB</div><div class="kpi-label">vendor overlay shippable</div></div>
+</div>
+
+<h2>§1 · RuVector is a 7-layer stack (from <a class="link" href="reference/foxref/ruvector-architecture-part01.md">foxref part01</a>)</h2>
+
+<div class="layer-diagram">Layer 7: AGENT FRAMEWORK (rvAgent)
+          McpServer, ToolRegistry, Middleware pipeline, SonaMiddleware  — Rust-only, no JS binding
+Layer 6: COGNITIVE CONTAINERS (RVF)
+          .rvf files, MicroVm::launch  — DEFERRED (feedback_no_rvf.md)
+Layer 5: SELF-LEARNING (SONA)
+          SonaEngine (3 loops) + TrajectoryBuilder + ReasoningBank + EwcPlusPlus  — WE USE (sona NAPI)
+Layer 4: INTELLIGENCE
+          58+ attention mechs, GNN (GAT/GraphSAGE/GraphMAE), MinCUT (165 symbols x 49 modules)
+          Prime Radiant (CoherenceMemory 80 downstream) + Consciousness Phi  — accessible via NeuralSubstrate
+Layer 3: DISTRIBUTED (Raft)
+          Consensus, replication  — N/A (single-process)
+Layer 2: POSTGRES EXTENSION (230+ SQL funcs)  — N/A (single-node)
+Layer 1: VECTOR CORE
+          HnswIndex, VectorDB, SIMD distance  — transitive via IntelligenceEngine + sona</div>
+
+<p class="muted">We correctly use L5 (sona). L4 (NeuralSubstrate bundle) is <strong>the missing high-value layer</strong> accessible from JS without rebuild. L7 SonaMiddleware is Rust-only; we replicate its effect via direct hook-handler calls.</p>
+
+<h2>§2 · 14-phase matrix — current plumbing state</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Phase</th><th>Hook</th><th>Status</th><th>Upstream symbol actually invoked</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>BOOT restore</td><td>SessionStart</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.loadState(json)</code> — vendor 0.1.9-ruflo.1</td></tr>
+    <tr><td>1</td><td>CAPTURE prompt</td><td>UserPromptSubmit</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.beginTrajectory(emb)</code></td></tr>
+    <tr><td>2</td><td>RETRIEVE</td><td>UserPromptSubmit</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.findPatterns(emb, 5)</code> · <span class="warn">upgrade candidate: IntelligenceEngine.recall()</span></td></tr>
+    <tr><td>3</td><td>APPLY (route + LoRA)</td><td>UserPromptSubmit</td><td><span class="cb cb-ok">☑</span> <span class="warn">*</span></td><td>MicroLoRA auto in sona · routing: Claude-Code native <br/><span class="warn">unused: IntelligenceEngine.route(task, file) — upstream-canonical</span></td></tr>
+    <tr><td>4</td><td>CAPTURE pre-step</td><td>PreToolUse</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.addTrajectoryStep(id, vec, [], 0)</code> · <span class="warn">enrichment candidates: ASTParser.parse(file), classifyChange(diff)</span></td></tr>
+    <tr><td>5</td><td>CAPTURE post-step</td><td>PostToolUse</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.addTrajectoryStep(id, vec, [], ±0.1)</code> · <span class="warn">enrichment: analyzeFile(complexity delta), NeuralSubstrate.coherence.observe()</span></td></tr>
+    <tr><td>6</td><td>JUDGE</td><td>Stop</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.endTrajectory(id, 0.5)</code> neutral · upstream VerdictAnalyzer not reachable from JS</td></tr>
+    <tr><td>7</td><td>DISTILL</td><td>Stop</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.forceLearn()</code> → reasoning_bank extract_patterns (General hardcoded)</td></tr>
+    <tr><td>8</td><td>REFINE mincut</td><td>Stop</td><td><span class="cb cb-no">☐</span></td><td>deferred ADR-004 · <span class="warn">npm has minCut/louvainCommunities/spectralClustering — re-open candidates</span></td></tr>
+    <tr><td>9</td><td>STORE + TUNE</td><td>Stop</td><td><span class="cb cb-ok">☑</span></td><td>C4 <code>db.store(entry)</code> + HNSW internal · <span class="warn">compose: FastAgentDB as hot buffer</span></td></tr>
+    <tr><td>10</td><td>CONSOLIDATE</td><td>SessionEnd</td><td><span class="cb cb-no">☐</span></td><td>MemoryCompressor zero bindings · <span class="warn">partial alternative: IntelligenceEngine.recordEpisode+flushEpisodeBatch</span></td></tr>
+    <tr><td>11</td><td>FORGET</td><td>SessionEnd</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.consolidateTasks()</code> — vendor rebuild adds binding</td></tr>
+    <tr><td>12</td><td>PRUNE</td><td>SessionEnd</td><td><span class="cb cb-ok">☑</span></td><td><code>sona.prunePatterns(0.05, 0, 90d)</code></td></tr>
+    <tr><td>13</td><td>EXPORT</td><td>SessionEnd</td><td><span class="cb cb-ok">☑</span></td><td>metrics + state.json to <code>.claude-flow/</code></td></tr>
+  </tbody>
+</table>
+
+<p class="subtitle">* All ☑ rows are plumbed, but most phases have <strong>unused upstream upgrades</strong> listed in the "enrichment candidates" column. See §4 Tier 1-3 adoption plan.</p>
+
+<h2>§3 · Data Quality log</h2>
+
+<table>
+  <thead><tr><th>ID</th><th>Symptom</th><th>Root cause</th><th>Status · Action</th></tr></thead>
+  <tbody>
+    <tr><td><strong>DQ-01</strong></td><td><code>avg_quality</code> uniform 0.50 per input</td><td><code>reasoning_bank.rs:186-187</code>: upstream averages caller-passed <code>trajectory.quality</code>. We pass neutral 0.5. Upstream-contract-correct.</td><td><span class="good">ACCEPTED</span> · upstream-owned</td></tr>
+    <tr><td><strong>DQ-02</strong></td><td>formatter showed <code>(0.00) [SONA] pattern [rank #N]</code></td><td>Local bug — read non-existent <code>JsLearnedPattern</code> fields</td><td><span class="good">RESOLVED 2026-04-15</span></td></tr>
+    <tr><td><strong>DQ-03</strong></td><td>All <code>pattern_type = "General"</code></td><td><code>reasoning_bank.rs:208</code> hardcoded; VerdictAnalyzer+PatternCategory Rust-only, zero bindings (5-layer §2 confirmed)</td><td><span class="warn">PARTIAL-WORKAROUND AVAILABLE</span> · use <code>classifyChange</code> upstream classifier output → MemoryEntry <code>tags</code> (§4 Tier 2)</td></tr>
+    <tr><td><strong>DQ-04</strong></td><td><code>cluster_size = 1</code> universal</td><td>Config default <code>min_cluster_size = 1</code> · self-corrects at N &gt; 5</td><td><span class="good">NOT-A-BUG</span></td></tr>
+    <tr><td><strong>DQ-05</strong></td><td><code>access_count = 0</code> everywhere</td><td>Retrieval via in-memory findPatterns, not C4 SQL. By design.</td><td><span class="good">BY DESIGN</span> · ADR-001</td></tr>
+    <tr><td><strong>DQ-06</strong></td><td><code>ewc_task_count = 0</code></td><td>Upstream <code>detect_task_boundary</code> never triggers</td><td><span class="warn">CANDIDATE FIX</span> · <code>NeuralSubstrate.coherence.report()</code> drift spike as task-boundary proxy (§4 Tier 1)</td></tr>
+  </tbody>
+</table>
+
+<h2>§4 · Tiered adoption plan (output of v2 analysis)</h2>
+
+<p>Full details in <a class="link" href="analysis/20260415_ruvector_usage_analysis_v2.md"><code>_doc/analysis/20260415_ruvector_usage_analysis_v2.md</code></a> (replaces v1). Summary:</p>
+
+<div class="tier tier-1">
+<h3>Tier 1 — <span class="good">✅ IMPLEMENTED 2026-04-15 PM</span> · zero invention · high value</h3>
+
+<table>
+  <thead><tr><th>Export</th><th>Status</th><th>Daemon service / wiring</th><th>Smoke evidence</th></tr></thead>
+  <tbody>
+    <tr><td><strong><code>IntelligenceEngine</code></strong> <span class="pkg ruvector">ruvector</span></td><td><span class="good">LIVE</span></td><td><code>intelligence</code> service · ADR-007 lifecycle. Init via granular <code>initOnnx() + initVectorDb() + initDefaultWorkerMappings()</code> (no unified <code>init()</code> exists). <code>rvHelpers={classifyChange, extractAllPatterns}</code> cached at init.</td><td>daemon.log: "IntelligenceEngine: ready (composes sona+onnx+parallel+attention+HNSW)"</td></tr>
+    <tr><td><strong><code>NeuralSubstrate</code></strong> <span class="pkg ruvector">ruvector</span></td><td><span class="good">LIVE</span></td><td><code>substrate</code> service · standalone, zero internal require. Wired: <code>substrate.coherence.observe(prompt-emb, traj-id)</code> at end_trajectory; <code>substrate.coherence.report()</code> at session_end.</td><td>session_end payload: <code>coherenceReport: {overallScore, driftScore, stabilityScore, alignmentScore, anomalies}</code></td></tr>
+    <tr><td><code>FastAgentDB</code> <span class="pkg ruvector">ruvector</span></td><td><span class="muted">Transitive</span></td><td>Composed inside IntelligenceEngine (intelligence-engine.js:108 <code>require('./agentdb-fast')</code>). Direct service add deferred — IE retrieval methods (recall/learnFromSimilar/patterns) cover current need. Re-evaluate if explicit <code>searchByState(stateEmbedding)</code> shows value in dogfood.</td><td>composed-by-IE confirmed via gitnexus + JS source</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="tier tier-2">
+<h3>Tier 2 — <span class="good">✅ PARTIALLY IMPLEMENTED 2026-04-15 PM</span> (classifyChange + analyze_file IPC live; remaining items deferred)</h3>
+
+<table>
+  <thead><tr><th>Export</th><th>Status</th><th>Where wired</th><th>Smoke / observation</th></tr></thead>
+  <tbody>
+    <tr><td><strong><code>classifyChange</code></strong></td><td><span class="good">LIVE</span></td><td><code>end_trajectory</code> handler — output → MemoryEntry tags <code>category:*</code> + metadata.category. Zero invention.</td><td><strong>Smoke observation:</strong> returns <code>'unknown'</code> universally with empty diff input. Wiring correct, but upstream <code>classifyChange(commitMsg, diffContent)</code> needs real diff content to classify. Future enhancement: capture diffs at PostToolUse, pass to classifyChange. Today: tag still added (always 'unknown'); mechanism in place.</td></tr>
+    <tr><td><strong><code>extractAllPatterns</code></strong> + <code>ASTParser</code> + <code>CodeParser</code></td><td><span class="good">LIVE via IPC</span></td><td>New IPC <code>analyze_file({path, content?})</code> in daemon — hook-handler can call on-demand. Pure passthrough; no auto-fire to keep PreToolUse latency low.</td><td>Smoke verified: <code>analyze_file('intelligence.cjs')</code> → <code>{file, language, functions: 7, classes, imports: 4, exports, todos, variables}</code>. ASTParser multi-language detection working (TS/JS/Py/Rust/Go/Java/C++/Ruby/PHP).</td></tr>
+    <tr><td><code>parseDiff</code></td><td><span class="warn">Deferred</span></td><td>Pending diff-capture path (needs PostToolUse-side diff extraction first). Couples with classifyChange improvement.</td><td>Wire-up cost ~10-15 LOC + diff capture infra ~30 LOC. Deferred to next iteration.</td></tr>
+    <tr><td><code>findSimilarCommits</code></td><td><span class="warn">Deferred</span></td><td>Same as parseDiff — needs diff content. Could replace fixed-string with embedding similarity over real commit history.</td><td>Pending external git context.</td></tr>
+    <tr><td><code>analyzeFile</code> (complexity)</td><td><span class="warn">Deferred</span></td><td>PostToolUse complexity delta. Standalone (no diff dep). Easy add (~10 LOC).</td><td>Defer to next iteration unless dogfood demands.</td></tr>
+    <tr><td><code>extractFunctions/Imports/Classes/Todos</code> (granular)</td><td><span class="muted">Transitive</span></td><td>Composed by <code>extractAllPatterns</code> (already live via analyze_file IPC). No direct import needed.</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<p class="subtitle"><em>Other Tier 2 deferrals:</em> <code>CodeGraph</code> (251 LOC, no concrete consumer yet), <code>suggestTests/shouldRouteToTester/parseIstanbulCoverage</code> (need target with Istanbul reports). Coverage cluster is high-value when target qualifies — re-evaluate per project.</p>
+</div>
+
+<div class="tier tier-3">
+<h3>Tier 3 — ABLATE first · decide per evidence</h3>
+
+<p>Run targeted ablations; if signal is usable → compose. If not → document as upstream-inadequate-for-context. <strong>Do NOT adopt speculatively.</strong></p>
+
+<table>
+  <thead><tr><th>Candidate</th><th>Ablation question</th></tr></thead>
+  <tbody>
+    <tr><td><code>LearningEngine</code> (9 RL algorithms)</td><td>Feed trajectories + PostToolUse ±0.1 rewards over N samples. Does Q-table learn meaningfully? What would "action" mean in hook context?</td></tr>
+    <tr><td><code>FederatedCoordinator</code> + <code>EphemeralAgent</code> (<span class="pkg ruvllm">@ruvector/ruvllm</span>)</td><td>Verify embedder path is NOT the poisoned <code>sona.js:488</code> 64-dim hash embedder. If clean → multi-session aggregation candidate.</td></tr>
+    <tr><td><code>SemanticRouter</code></td><td>Vs <code>IntelligenceEngine.route()</code>. Pick one or compose.</td></tr>
+    <tr><td><code>SwarmCoordinator</code> (inside NeuralSubstrate)</td><td>Only if parallel hook workers emerge.</td></tr>
+    <tr><td><code>CodeGraph</code> (251 LOC)</td><td>Session call-graph tracking. Empirical value?</td></tr>
+    <tr><td>Graph algos: <code>louvainCommunities</code> / <code>minCut</code> / <code>spectralClustering</code></td><td><strong>Phase 8 REFINE re-open candidate</strong> (ADR-004 trigger: pattern bank &gt;100 + useful clustering).</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="tier tier-4">
+<h3>Tier 4 — SKIP · rule-compliant with documented reason</h3>
+
+<ul>
+  <li><strong>RVF family</strong> (<code>createRvfStore, MicroVm, .rvf</code>) — deferred per <code>_memory/feedback_no_rvf.md</code>.</li>
+  <li><strong>Hyperbolic math</strong> (<code>HyperbolicAttention, expMap, logMap, mobiusAddition, poincareDistance, projectToPoincareBall</code>) — domain mismatch (no hierarchical data).</li>
+  <li><strong>Internal primitives</strong> (10 attention variants, <code>AdamOptimizer, RuvectorLayer, Float32BufferPool, TensorBufferManager, TensorCompress, ExtendedWorkerPool, ParallelBatchProcessor</code>) — transitively composed by higher-level exports we adopt.</li>
+  <li><strong>JS stubs with known bugs</strong>: <code>@ruvector/ruvllm::SonaCoordinator</code> — <code>dist/cjs/sona.js:488</code> 64-dim hash embedder poisons learning.</li>
+  <li><strong>Rust-only / no binding path</strong>: <code>AgenticMemory</code>, <code>SonaMiddleware</code>, <code>VerdictAnalyzer</code>, <code>PatternCategory</code>, <code>MicroVm</code>, Prime Radiant <code>CoherenceMemory</code> (distinct from the <code>CoherenceMonitor</code> JS class which IS accessible). 5-layer §2 evidence in pulse v2 + v2 analysis.</li>
+  <li><strong>Capability checks</strong> (13 <code>isXAvailable</code> functions) — use ad-hoc in boot logs; don't wire as primary architecture.</li>
+</ul>
+</div>
+
+<h2>§5 · §2 5-layer evidence — why some things are NOT reachable</h2>
+
+<table>
+  <thead><tr><th>Layer</th><th>Source</th><th>Key finding</th></tr></thead>
+  <tbody>
+    <tr><td>1 · foxref</td><td><code>_doc/reference/foxref/ruvector-architecture-part01.md</code></td><td>ADR-078 line 31-33: <em>"VerdictAnalyzer unused — 4 refs total, experiences recorded but never judged"</em>. v3.5.51 identified this gap; v4 inherited.</td></tr>
+    <tr><td>2 · pi-brain</td><td>α-curated memories (NAPI-RS pattern, ADR-050 bindings convention)</td><td>Convention consistent: <code>-wasm</code> companion crate + NAPI crate per capability. Zero memory contradicts absence of binding for VerdictAnalyzer.</td></tr>
+    <tr><td>3 · gitnexus</td><td>ruvector graph (225k nodes / 442k edges)</td><td>Queries for <code>JsReasoningBank/WasmReasoningBank/JsVerdictAnalyzer/JsPatternCategory</code> return <strong>zero matches</strong> across the entire ruvector codebase.</td></tr>
+    <tr><td>4 · catalog</td><td><code>ruvector-catalog/SKILL.md</code> — 3 paths model</td><td>Path 1 npm: <code>IntelligenceEngine/LearningEngine</code> exposed ✓, categorization ❌ · Path 2 WASM: <code>ruvllm-wasm/bindings.rs</code> 1152 LOC → 0 VerdictAnalyzer · Path 3 NAPI: <code>examples/ruvLLM/src/napi.rs</code> 857 LOC → no JsReasoningBank.</td></tr>
+    <tr><td>5 · source</td><td>Direct read of Rust + JS</td><td><code>sona::ReasoningBank::extract_patterns:208</code> hardcodes General · <code>VerdictAnalyzer::determine_category()</code> exists (verdicts.rs:647-677) but none annotated <code>#[napi]</code>/<code>#[wasm_bindgen]</code>.</td></tr>
+  </tbody>
+</table>
+
+<p>So: DQ-03 direct fix requires <strong>NAPI rebuild of ruvllm (Option B, deferred per ADR-005 §7)</strong>. <strong>Partial workaround via <code>classifyChange</code></strong> (Tier 2) gives categorization at the MemoryEntry tags level without rebuild.</p>
+
+<h2>§6 · Package map — who gives us what (updated)</h2>
+
+<table>
+  <thead><tr><th>Package</th><th>Type</th><th>Exports we USE</th><th>Tier-1 adoptions PLANNED</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pkg sona">@ruvector/sona@0.1.9-ruflo.1</span> (vendor overlay)</td><td>NAPI</td><td>SonaEngine {beginTrajectory, addTrajectoryStep, endTrajectory, findPatterns, forceLearn, flush, tick, saveState, loadState, consolidateTasks, prunePatterns}</td><td>— (transitively composed inside IntelligenceEngine)</td></tr>
+    <tr><td><span class="pkg ruvector">ruvector@0.2.22</span></td><td>JS wrapper over NAPI</td><td>AdaptiveEmbedder (via xenova monkey-patch)</td><td><span class="verdict-use">IntelligenceEngine, NeuralSubstrate, FastAgentDB</span> + Tier 2 code-analysis cluster</td></tr>
+    <tr><td><span class="pkg ruvllm">@ruvector/ruvllm@2.5.4</span></td><td>JS stubs (no <code>.node</code> installed)</td><td>None directly (verify.sh only asserts load)</td><td>Tier 3 ablate: <code>FederatedCoordinator, EphemeralAgent</code> (embedder-path verification required)</td></tr>
+    <tr><td><span class="pkg cf">@claude-flow/memory@3.0.0-alpha.14</span></td><td>Real npm</td><td>SQLiteBackend — Phase 9 STORE, BLOBs</td><td>Keep. Tier 1 <code>FastAgentDB</code> coexists (different responsibility).</td></tr>
+    <tr><td><span class="pkg cf">@xenova/transformers@2.17.2</span></td><td>Real npm (ONNX)</td><td>384-dim MiniLM-L6-v2</td><td>Keep. 98% dense, L2=1.0 verified.</td></tr>
+    <tr><td><span class="pkg ruflo">@ruvector/pi-brain</span></td><td>MCP + CLI</td><td>pi-brain search (via MCP)</td><td>Keep. Optional: brain_share for ruflo-learned patterns → collective.</td></tr>
+  </tbody>
+</table>
+
+<h2>§7 · Daemon architecture (LIVE post Tier 1+2 implementation)</h2>
+
+<div class="layer-diagram">daemon services (ADR-007 pattern) — POST IMPLEMENTATION 2026-04-15 PM
+├── memory       = @claude-flow/memory::SQLiteBackend                 ✅ live (persistent)
+├── sona         = @ruvector/sona vendor overlay 0.1.9-ruflo.1        ✅ live (Phase 0/11/12 owner)
+├── embedder     = ruvector.AdaptiveEmbedder + xenova monkey-patch    ✅ live
+├── intelligence = ruvector.IntelligenceEngine                         ✅ NEW Tier 1, live
+│     ├── sona (auto-composed, via @ruvector/sona vendor overlay)
+│     ├── onnxEmbedder (auto-composed, xenova monkey-patch applies)
+│     ├── parallel (composed but disabled: enableParallel=false single daemon)
+│     ├── attention (composed via @ruvector/attention explicit dep)
+│     └── HNSW (composed via @ruvector/core explicit dep)
+│     └── FastAgentDB (composed via require('./agentdb-fast'))         [transitive, hot buffer]
+└── substrate    = new ruvector.NeuralSubstrate({dimension: 384})     ✅ NEW Tier 1, live
+      ├── coherence (CoherenceMonitor — DQ-06 candidate, observe/report wired)
+      ├── drift (SemanticDriftDetector — available, not yet exercised)
+      ├── memory (MemoryPhysics — available)
+      ├── state (EmbeddingStateMachine — available)
+      └── swarm (SwarmCoordinator — available, no parallel workers today)
+
+Tier 2 inline enrichments LIVE:
+├── end_trajectory: substrate.coherence.observe(emb, traj-id) ✅
+├── end_trajectory: classifyChange(prompt, diff='') → tags ✅ (limited — needs diff content)
+├── session_end:    substrate.coherence.report() → coherenceReport in metrics ✅
+└── analyze_file IPC: rvHelpers.extractAllPatterns(path, content) ✅ on-demand for hook-handler
+
+Tier 2 deferred (pending diff-capture infra):
+├── parseDiff: needs PostToolUse diff extraction
+├── findSimilarCommits: needs git history embedding store
+└── analyzeFile complexity: PostToolUse cyclomatic delta — standalone, easy to add</div>
+
+<h2>§8 · Hive investigation methodology</h2>
+
+<p>This analysis was produced using a <strong>hive hybrid</strong> (queen + workers) with §2 protocol:</p>
+
+<ol>
+  <li><strong>Queen §2 Layer 1 foxref</strong> — read architecture-part01 first to establish 7-layer mental model. This corrected my prior analyses which had treated ruvector as a flat npm package rather than a multi-layer stack.</li>
+  <li><strong>Queen §2 Layer 2 pi-brain</strong> — 4 CLI queries for AgenticMemory/SonaMiddleware/IntelligenceEngine/NAPI patterns. Found ecosystem conventions, no contradictions to no-binding claims.</li>
+  <li><strong>Queen §2 Layer 3 gitnexus</strong> — code graph queries on ruvector (225k nodes / 442k edges) for binding-layer classes. Confirmed zero bindings for VerdictAnalyzer family.</li>
+  <li><strong>Queen §2 Layer 4 catalog</strong> — 3-path access model + capability map consulted.</li>
+  <li><strong>Worker A</strong> (Explore subagent, 400-word report) — npm ecosystem survey. <strong>Found: NeuralSubstrate (5 subsystems bundled), FastAgentDB, FederatedCoordinator, EphemeralAgent as real classes missed by prior v1 analysis.</strong></li>
+  <li><strong>Worker B</strong> (Explore subagent, 500-word report) — CoherenceMonitor source ablation (175 LOC real stats logic) + code-analysis cluster ablation (13 of 14 exports real with verified LOC + methods).</li>
+  <li><strong>Queen verification</strong> — direct <code>require()</code> introspection on all worker-claimed classes before accepting findings. All verified (NeuralSubstrate/FastAgentDB/FederatedCoordinator/EphemeralAgent instances created, methods enumerated, bundled subsystems confirmed).</li>
+  <li><strong>Queen synthesis</strong> — this doc + rebuild of v4 HTML + updated <code>_doc/analysis/20260415_ruvector_usage_analysis_v2.md</code>.</li>
+</ol>
+
+<h2>§9 · References</h2>
+
+<table>
+  <thead><tr><th>Doc</th><th>Purpose</th><th>Superseded?</th></tr></thead>
+  <tbody>
+    <tr><td><a class="link" href="analysis/20260415_ruvector_usage_analysis_v2.md">ruvector_usage_analysis_v2.md</a></td><td>Master analysis — 11 sections, tiered adoption plan, per-export verdict</td><td>Current (v1 renamed to _SUPERSEDED)</td></tr>
+    <tr><td><a class="link" href="zz_pulse_check/20260415_1320_pulse_check_v2.md">pulse_check_v2.md</a></td><td>§2 5-layer complete for DQ-03 + Option C/B/A framework</td><td>Current (v1 2026-04-15 02:47 kept as historical)</td></tr>
+    <tr><td><a class="link" href="reference/visual-summary_Phase3_proposal.html">visual-summary_Phase3_proposal.html</a></td><td>Detailed 14-phase matrix with Rust <code>file:line</code> citations + §12 DQ tracking log</td><td>Current (reference-detail companion; this v4 is the scan-in-3-min overview)</td></tr>
+    <tr><td><code>_memory/feedback_upstream_trust_no_invention.md</code></td><td>Two-sided rule: never invent + use liberally</td><td>Current (updated 2026-04-15 PM with Side 2)</td></tr>
+    <tr><td><a class="link" href="reference/foxref/ruvector-architecture-part01.md">foxref part01</a></td><td>7-layer stack architecture, canonical wiring plan</td><td>Immutable reference</td></tr>
+    <tr><td><a class="link" href="adr/005-v4-alpha-published-npm-only.md">ADR-005</a></td><td>Vendor rebuild carve-out (§7 forcing-function rule — Option B trigger)</td><td>Current</td></tr>
+    <tr><td><a class="link" href="adr/007-daemon-service-lifecycle.md">ADR-007</a></td><td>Daemon services pattern — Tier 1 additions extend this</td><td>Current</td></tr>
+    <tr><td><code>analysis/20260415_ruvector_usage_analysis_v1_SUPERSEDED.md</code></td><td>Historical (conservative rejections later recalibrated)</td><td><strong>SUPERSEDED by v2</strong></td></tr>
+  </tbody>
+</table>
+
+<h2>§10 · Next steps</h2>
+
+<div class="tldr">
+<strong>Tier 1+2 implemented + smoke verified.</strong> Next: dogfood at scale (real Claude Code sessions, ≥5 to gather meaningful coherence/drift data and exercise classifyChange path with real diffs). Then re-pulse v3 to measure: (a) does substrate.coherence detect actual task-boundaries? (b) does classifyChange become useful when diff content is captured? (c) does IntelligenceEngine.route() produce observable routing decisions?
+
+After dogfood evidence:
+<ul>
+  <li><strong>Phase 4</strong> — pi-brain brain_share IPC for outbound learning (operator-driven, optional)</li>
+  <li><strong>Phase 5</strong> — Tier 3 ablations (LearningEngine, FederatedCoordinator+EphemeralAgent embedder-isolation, SemanticRouter vs IE.route, SwarmCoordinator, CodeGraph, graph algos for ADR-004 re-open, coverage router) — parallel worker sessions</li>
+  <li><strong>Phase 6</strong> — DQ-03 full fix re-evaluation: operator hypothesis is missing piece is ANOTHER ruvector feature/package (not ruvllm rebuild). Re-investigate after dogfood reveals what's still gap</li>
+  <li><strong>Phase 7</strong> — <code>ruvector-postgres</code> scoping for production. MUST-have for prod, NOT urgent for dev. Currently no <code>@ruvector/postgres</code> npm; would require Postgres + extension + <code>pg</code> Node client. Architectural decision deferred.</li>
+</ul>
+</div>
+
+<p class="footer-note">
+Generated 2026-04-15 late-PM · Tier 1+2 IMPLEMENTATION LIVE · ADR-008 cap raise 850→1200 · Hive session (queen + 2 Explore workers) v2 analysis · Plan at <a class="link" href="plan/20260415_tier1_2_adoption_plan.md"><code>plan/20260415_tier1_2_adoption_plan.md</code></a> · Complements <a class="link" href="reference/visual-summary_Phase3_proposal.html">visual-summary_Phase3_proposal.html</a> (detailed matrix reference with <code>file:line</code> citations)
+</p>
+
+</body>
+</html>

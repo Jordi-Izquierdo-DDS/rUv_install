@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 3 Proposal — Learning Cycle × Claude-Code Hooks × Ruvector Crates (v3)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px 60px; line-height: 1.45; }
+  h1 { font-size: 2.3em; color: #58a6ff; margin-bottom: 6px; }
+  h2 { font-size: 1.6em; color: #58a6ff; margin: 28px 0 14px; }
+  h3 { font-size: 1.1em; color: #79c0ff; margin: 12px 0 8px; }
+  .subtitle { font-size: 0.98em; color: #8b949e; margin-bottom: 20px; }
+  .highlight { color: #f0883e; font-weight: bold; }
+  .green { color: #3fb950; }
+  .red { color: #f85149; }
+  .yellow { color: #d29922; }
+  .blue { color: #58a6ff; }
+  .purple { color: #bc8cff; }
+  .orange { color: #f0883e; }
+  .cyan { color: #39d0d8; }
+
+  .intro { background: #161b22; border-left: 4px solid #58a6ff; padding: 12px 16px; border-radius: 6px; margin: 14px 0 22px; }
+  .intro p { margin: 4px 0; font-size: 0.93em; line-height: 1.5; }
+
+  .correction { background: #2b1a1a; border-left: 4px solid #f85149; padding: 12px 16px; border-radius: 6px; margin: 14px 0 22px; }
+  .correction strong { color: #f85149; }
+  .correction p { margin: 4px 0; font-size: 0.9em; line-height: 1.5; color: #d9d1c9; }
+
+  /* Ablation / insight callout — louder than .intro, less alarmist than .correction */
+  .insight { background: #1f2a1f; border-left: 4px solid #3fb950; padding: 14px 18px; border-radius: 6px; margin: 14px 0 22px; }
+  .insight h3 { color: #3fb950; margin: 0 0 6px 0; font-size: 1.05em; }
+  .insight p { margin: 5px 0; font-size: 0.9em; line-height: 1.5; color: #d9d1c9; }
+  .insight code { background: #0d1a0d; padding: 1px 5px; border-radius: 3px; color: #79c0ff; font-size: 0.88em; }
+  .insight .layer { margin: 6px 0; padding-left: 12px; border-left: 2px solid #3fb95044; }
+  .insight .layer-label { color: #f0883e; font-weight: 700; font-family: monospace; font-size: 0.85em; }
+  .insight table.evidence { width: 100%; margin-top: 6px; font-size: 0.83em; border-collapse: collapse; }
+  .insight table.evidence th, .insight table.evidence td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #30363d; }
+  .insight table.evidence th { color: #79c0ff; font-weight: 700; }
+  .insight table.evidence td.val { font-family: monospace; color: #3fb950; }
+
+  table.matrix { width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0; font-size: 0.84em; }
+  table.matrix th { text-align: left; padding: 9px 10px; background: #161b22; color: #58a6ff; border-bottom: 2px solid #30363d; font-weight: 700; font-size: 0.95em; }
+  table.matrix td { padding: 11px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  table.matrix tr:hover td { background: #161b22; }
+
+  td.cycle-cell { background: #161b22; font-weight: 700; color: #f0883e; white-space: nowrap; border-right: 2px solid #30363d; font-size: 0.92em; }
+  td.cycle-cell small { display: block; font-size: 0.72em; color: #8b949e; font-weight: normal; margin-top: 3px; }
+
+  td.hook-cell { background: #0d1a2d; font-family: monospace; color: #79c0ff; white-space: nowrap; font-size: 0.82em; border-right: 1px solid #30363d; }
+  td.loop-cell { text-align: center; font-weight: 700; white-space: nowrap; border-right: 1px solid #30363d; font-size: 0.82em; }
+  .loop-A { color: #f0883e; }
+  .loop-B { color: #3fb950; }
+  .loop-C { color: #bc8cff; }
+
+  /* v4 status checkboxes — reflect actual wiring state as of 2026-04-14 */
+  td.status-cell { text-align: center; white-space: nowrap; border-right: 1px solid #30363d; font-size: 0.82em; vertical-align: middle; }
+  .cb { font-family: monospace; font-size: 1.1em; font-weight: 700; }
+  .cb-ok      { color: #3fb950; }        /* ☑ wired and working */
+  .cb-partial { color: #d29922; }        /* ◐ partially wired (observability, or upstream-internal only) */
+  .cb-blocked { color: #f0883e; }        /* ⚠ code in place but upstream-blocked (OQ-2/OQ-3) */
+  .cb-no      { color: #f85149; }        /* ☐ not wired (deferred / dep not installed) */
+  .cb-note    { display: block; color: #8b949e; font-size: 0.7em; font-family: monospace; margin-top: 2px; white-space: normal; line-height: 1.25; }
+
+  /* Data-quality caveat markers (pulse check 2026-04-15). Plumbing stays ☑;
+     DQ flags call out semantic / signal-diversity concerns that don't break
+     anything but limit what the system can actually learn. See
+     _doc/zz_pulse_check/20260415_0247_pulse_check.md §4-§5. */
+  .dq-flag { display: inline-block; background: #d2992233; color: #e3b341; border: 1px solid #d2992266; border-radius: 3px; padding: 1px 5px; margin: 4px 0 2px 0; font-size: 0.72em; font-weight: 600; font-family: monospace; letter-spacing: 0.02em; }
+  .dq-flag.dq-high   { background: #f8514933; color: #f85149; border-color: #f8514966; }
+  .dq-flag.dq-medium { background: #d2992233; color: #e3b341; border-color: #d2992266; }
+  .dq-flag.dq-low    { background: #3fb95022; color: #7ee787; border-color: #3fb95044; }
+  .dq-note { display: block; color: #e3b341bb; font-size: 0.7em; font-family: monospace; margin-top: 2px; white-space: normal; line-height: 1.25; }
+
+  .pkg { background: #21262d; border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.78em; color: #79c0ff; display: inline-block; margin: 1px 2px; white-space: nowrap; }
+  .pkg.sona { color: #3fb950; background: #3fb95022; border: 1px solid #3fb95044; }
+  .pkg.ruvllm { color: #f0883e; background: #f0883e22; border: 1px solid #f0883e44; }
+  .pkg.gnn { color: #39d0d8; background: #39d0d822; border: 1px solid #39d0d844; }
+  .pkg.attention { color: #bc8cff; background: #bc8cff22; border: 1px solid #bc8cff44; }
+  .pkg.mincut { color: #f778ba; background: #f778ba22; border: 1px solid #f778ba44; }
+  .pkg.mcp { color: #e3b341; background: #e3b34122; border: 1px solid #e3b34144; }
+  .pkg.prime { color: #7ee787; background: #7ee78722; border: 1px solid #7ee78744; }
+  .pkg.ruflo { color: #d2a8ff; background: #d2a8ff22; border: 1px solid #d2a8ff44; }
+
+  .ref { color: #8b949e; font-size: 0.74em; font-family: monospace; display: block; margin-top: 3px; }
+  .hook-desc { color: #8b949e; font-size: 0.75em; font-family: monospace; display: block; margin-top: 2px; white-space: normal; line-height: 1.3; }
+
+  .legend { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 14px; margin: 14px 0; font-size: 0.84em; }
+  .legend-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+
+  .flow-diagram { background: #0d1a2d; border: 1px solid #30363d; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 0.82em; color: #c9d1d9; white-space: pre; overflow-x: auto; margin: 14px 0; line-height: 1.5; }
+
+  .summary-boxes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+  .sbox { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; font-size: 0.83em; }
+  .sbox h3 { margin-top: 0; font-size: 0.96em; }
+  .sbox ul { margin: 6px 0 0 16px; }
+  .sbox li { margin: 2px 0; }
+
+  .footer-note { font-size: 0.82em; color: #8b949e; margin-top: 24px; padding-top: 12px; border-top: 1px solid #30363d; }
+</style>
+</head>
+<body>
+
+<h1>Phase 3 Proposal (v3) — Learning Cycle × Claude-Code Hooks × Ruvector Crates</h1>
+<p class="subtitle">What each hook event SHOULD call at each learning-cycle stage, which loop it participates in, which upstream crate owns the work.</p>
+
+<div class="correction">
+  <strong>v1 → v2 → v3 evolution:</strong>
+  <p>&bull; <strong>v1</strong>: fictional "8-phase" cycle; collapsed everything into <code>ruvllm</code>.</p>
+  <p>&bull; <strong>v2</strong>: corrected to foxRef's 3-loop model; distributed across 8 ruvector crates.</p>
+  <p>&bull; <strong>v3 (this)</strong>: re-centered on the LEARNING CYCLE (stages as rows) with the concrete Claude-Code hook that triggers each stage, plus the loop assignment. Drops the loop-box layout in favor of a single unified cycle-first view.</p>
+</div>
+
+<div class="intro">
+  <p><strong class="highlight">Source of truth:</strong> <code>doc/reference/foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md</code>, <code>doc/reference/foxref/ruvector-architecture-part0{1,2}.md</code>.</p>
+  <p><strong class="highlight">Verification:</strong> every <code>file:line</code> citation verified via <code>gitnexus_context</code> against repo <code>ruvector_GIT_v2.1.2_20260409</code> (6a655e2, 225k nodes / 442k edges).</p>
+  <p><strong class="highlight">Investigation doc:</strong> <code>doc/investigations/ruvector-crate-mapping-2026-04-13.md</code>.</p>
+</div>
+
+<div class="insight">
+  <h3>Critical insight — OQ-2 root cause (ablated 2026-04-14) · <span style="color:#3fb950;">RESOLVED 2026-04-15 via vendor rebuild</span></h3>
+  <div style="background:#3fb95022; border:1px solid #3fb95066; border-radius:6px; padding:10px 12px; margin:10px 0;">
+    <strong style="color:#3fb950;">🟢 Status update 2026-04-15:</strong> the Layer-1 <code>min_trajectories</code> gate has been <strong>closed</strong>. ruflo authorised a local NAPI rebuild of <code>@ruvector/sona</code> from the <code>_UPSTREAM_.../ruvector_GIT_v2.1.2_20260409</code> source (ADR-ruflo-005 §7 amendment). The rebuilt overlay ships at <code>vendor/@ruvector/sona/sona.linux-x64-gnu.node</code> (version tag <code>0.1.9-ruflo.1</code>) with the relaxed threshold already in place — first pattern now crystallizes from as few as 3 trajectories (smoke verified 2026-04-15). The ablation narrative and evidence table below is preserved as <strong>historical forensic record</strong> that motivated the forcing-function re-opening; it no longer describes current v4 behaviour. See <code>_doc/adr/005-v4-alpha-published-npm-only.md §7</code> for the amendment + <code>_doc/zz_pulse_check/20260415_0247_pulse_check.md</code> for the live pulse.
+  </div>
+  <p><em>Historical narrative (kept for forensic context — the reasoning that led to the 2026-04-15 rebuild decision):</em></p>
+  <p>A user asked: <em>"if capture works but patterns don't emerge, is ruflo only partially capturing?"</em> The answer — after reading <code>crates/sona/src/loops/{instant,background}.rs</code> and running ablations against the v4 daemon — is that <strong>ruflo's capture path is complete</strong>. What was gated was pattern distillation, by a <strong>two-layer</strong> upstream gate inside <code>@ruvector/sona@0.1.5</code>.</p>
+
+  <div class="layer">
+    <span class="layer-label">Layer 1 — <code>min_trajectories</code> gate</span>
+    <p>In <code>background.rs::run_cycle</code>, <code>force_learn</code> returns <code>"skipped: insufficient trajectories"</code> when <code>trajectories.len() &lt; min_trajectories</code>. Upstream v2.1.2 lowered this to <code>10</code> (source: <code>crates/sona/src/loops/background.rs:30</code>, comment: <em>"Was 100; lowered so patterns crystallize from fewer trajectories"</em>). <strong>Pinned <code>@ruvector/sona@0.1.5</code> still uses 100</strong> (pre-fix). Ablation: n=15 skipped, n=100 completed — gate confirmed at 100.</p>
+  </div>
+
+  <div class="layer">
+    <span class="layer-label">Layer 2 — k-means cluster quality</span>
+    <p>Even at n=100 (gate cleared, <code>status: "completed"</code>), <code>bank.extract_patterns()</code> returned <strong>0 clusters</strong>. Second-layer gate: k-means in <code>reasoning_bank</code> requires semantic diversity + per-cluster quality threshold. Synthetic smoke prompts (<code>"refactor variant N"</code>) are too similar — embeddings cluster too tightly. Requires varied real-world prompts to crystallize.</p>
+  </div>
+
+  <table class="evidence">
+    <thead><tr><th>Ablation</th><th>Buffer after submit</th><th>force_learn status</th><th>Patterns stored</th></tr></thead>
+    <tbody>
+      <tr><td>n=2 (original smoke-01)</td><td class="val">0 (drained)</td><td class="val">skipped: insufficient trajectories</td><td class="val">0</td></tr>
+      <tr><td>n=15</td><td class="val">15</td><td class="val">skipped: insufficient trajectories</td><td class="val">0</td></tr>
+      <tr><td>n=100 (synthetic similar prompts)</td><td class="val">100</td><td class="val">completed</td><td class="val">0</td></tr>
+      <tr><td>n=120 <strong style="color:#3fb950;">diverse</strong> (5 domains × 24, smoke-04)</td><td class="val">120</td><td class="val">completed</td><td class="val" style="color:#3fb950;"><strong>2 patterns</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:10px;"><strong style="color:#3fb950;">Crystallization confirmed (smoke-04, 2026-04-14):</strong> 5 semantic domains (auth, api, db, ui, test) × 24 real-world prompts = 120 trajectories → <code>force_learn</code> returned <code>"120 trajectories -> 2 patterns, status: completed"</code>. <code>find_patterns</code> on held-out probe <code>"add JWT refresh-token rotation"</code> returned a <code>JsLearnedPattern</code> (clusterSize=5, avgQuality=0.66, patternType=General). Both gates clear given enough trajectories AND semantic diversity.</p>
+
+  <p><strong style="color:#3fb950;">What IS working:</strong> capture (120/120 buffered, 0 dropped), step accumulation, MicroLoRA gradient accumulation (fires on every <code>on_trajectory</code>), pattern distillation at scale, C4 SQLiteBackend.store (persisted, verified across restart).</p>
+
+  <p><strong style="color:#3fb950;">C4 STORE integrity verified:</strong> initial smoke-04 read showed 100 entries out of 120, but follow-up re-query with <code>limit: 500</code> returned 120/120. Root cause was a self-imposed <code>memory_query</code> IPC clamp capped at 100 in the daemon handler; lifted to 1000 post-ablation. No upstream maxEntries cap, no silent store failure.</p>
+
+  <p><strong style="color:#3fb950;">EWC++ re-assessment (2026-04-14):</strong> previously marked OQ-3 as "EwcPlusPlus.consolidate not exposed → catastrophic-forgetting protection missing". Source re-read (<code>crates/sona/src/ewc.rs</code> + <code>loops/background.rs::run_cycle</code>) shows the truth is much narrower: <code>update_fisher</code>, <code>detect_task_boundary</code>, <code>start_new_task</code> (task-boundary consolidation), and <code>apply_constraints</code> all run automatically inside <code>force_learn→run_cycle</code>. Incremental EWC++ IS protecting against forgetting. The only missing piece is the cross-task compaction call <code>consolidate_all_tasks()</code> — a ≈5-line NAPI addition, not a major gap.</p>
+
+  <p><strong style="color:#3fb950;">OQ-2 outcome (2026-04-15):</strong> path (b) taken — built from <code>ruvector_GIT_v2.1.2_20260409</code> via <code>scripts/rebuild-sona.sh</code>. First pattern now crystallizes from ≥3 trajectories. <code>min_trajectories</code> gate is history.</p>
+
+  <p><strong style="color:#3fb950;">OQ-3 outcome (2026-04-15):</strong> path (b) taken — added 2 <code>#[napi]</code> annotations to <code>napi_simple.rs</code> in the same rebuild (<code>consolidate_tasks</code> + <code>prune_patterns</code>, ≈30 LOC wrapper). Exposed as <code>SonaEngine.consolidateTasks()</code> + <code>SonaEngine.prunePatterns(minQ, minA, maxAgeSecs)</code>. Daemon <code>session_end</code> now calls both before <code>saveState</code> (ADR-ruflo-007 services lifecycle). <code>MemoryCompressor</code> (Phase 10) still deferred — lives in a different crate (<code>@ruvector/ruvllm</code>'s NAPI at <code>examples/ruvLLM/src/napi.rs</code>) with no existing <code>MemoryCompressor</code> import; evaluated 2026-04-15, no empirical forcing function yet.</p>
+</div>
+
+<div class="legend">
+  <strong class="blue">Legend:</strong>
+  <div class="legend-row">
+    <span class="loop-A">&#9675; Loop A</span> instant (&lt;10ms)
+    <span class="loop-B">&#9675; Loop B</span> background (&lt;100ms, every ~30s)
+    <span class="loop-C">&#9675; Loop C</span> session-end (no budget, EWC++ fires here)
+  </div>
+  <div class="legend-row" style="margin-top:8px;">
+    <span class="pkg ruflo">ruflo glue</span>
+    <span class="pkg sona">sona</span>
+    <span class="pkg ruvllm">ruvllm</span>
+    <span class="pkg gnn">ruvector-gnn</span>
+    <span class="pkg attention">ruvector-attention</span>
+    <span class="pkg mincut">ruvector-mincut* / consciousness</span>
+    <span class="pkg mcp">rvAgent/rvagent-mcp</span>
+    <span class="pkg prime">prime-radiant</span>
+  </div>
+</div>
+
+<h2>Flow at a glance</h2>
+
+<div class="flow-diagram">Claude-Code hook event         Loop       Learning-cycle stage          Upstream crate &middot; symbol
+─────────────────────          ────       ─────────────────────         ─────────────────────────
+SessionStart              →    boot   →   [0] SESSION BOOT          →   ruvllm::HooksIntegration::session_start
+                                           (warm daemon, restore)         sona::LoopCoordinator::new
+
+UserPromptSubmit          →    A      →   [1] CAPTURE PROMPT        →   ruvllm::TrajectoryRecorder::start
+                                           [2] RETRIEVE similar      →   ruvllm::ReasoningBank::search_similar
+                                           [3] APPLY route + LoRA    →   ruvector-attention::LearnedRouter
+                                                                         sona::LoopCoordinator::base_lora
+
+PreToolUse                →    A      →   [4] CAPTURE step (pre)    →   ruvllm::HooksIntegration::pre_edit
+                                                                         (risk assessment, + ruflo pre-bash regex)
+
+PostToolUse               →    A      →   [5] CAPTURE step (post)   →   ruvllm::HooksIntegration::post_edit
+                                                                         sona::LoopCoordinator::on_inference
+                                                                         (append step, reward, maybe Loop B)
+
+Stop / SubagentStop       →    B      →   [6] JUDGE verdict         →   ruvllm::VerdictAnalyzer::analyze
+                                           [7] DISTILL patterns      →   ruvllm::EpisodicMemory::extract_patterns
+                                           [8] REFINE (mincut/GNN)   →   ruvector-mincut-gated-transformer::SparseMask
+                                                                         ruvector-consciousness::MinCutPhiEngine
+                                                                         ruvector-gnn::GraphMAE
+                                           [9] STORE + TUNE          →   ruvllm::PatternStore (HNSW)
+                                                                         prime-radiant::RegimeTracker
+                                                                         prime-radiant::WitnessSource
+
+SessionEnd                →    C      →   [10] CONSOLIDATE         →    ruvllm::MemoryCompressor (10:1)
+                                           [11] FORGET (EWC++)      →    sona::EwcPlusPlus::consolidate
+                                           [12] PRUNE               →    sona::ReasoningBank (usage_count gate)
+                                           [13] EXPORT metrics      →    ruvllm::HooksIntegration::session_end
+</div>
+
+<h2>Learning-cycle matrix — stage × hook × loop × ruflo × upstream</h2>
+
+<div class="legend" style="margin-bottom:6px;">
+  <strong class="blue">v4 status legend (checkboxes):</strong>
+  <div class="legend-row" style="margin-top:6px;">
+    <span class="cb cb-ok">☑</span>&nbsp;wired &amp; verified
+    <span class="cb cb-partial" style="margin-left:10px;">◐</span>&nbsp;partial (observability or upstream-internal only)
+    <span class="cb cb-blocked" style="margin-left:10px;">⚠</span>&nbsp;code in place, upstream-blocked (OQ-2 / OQ-3)
+    <span class="cb cb-no" style="margin-left:10px;">☐</span>&nbsp;not wired (dep absent or deferred)
+  </div>
+  <div class="legend-row" style="margin-top:6px;">
+    <strong style="color:#e3b341;">Data-quality flags (orthogonal to plumbing status):</strong>
+    <span class="dq-flag dq-high" style="margin-left:10px;">🟥 DQ-HIGH</span>&nbsp;signal blocks learning gradient
+    <span class="dq-flag dq-medium" style="margin-left:10px;">🟧 DQ-MED</span>&nbsp;missing semantic label / formatter gap
+    <span class="dq-flag dq-low" style="margin-left:10px;">🟩 DQ-LOW</span>&nbsp;self-correcting at scale / benign
+  </div>
+  <p style="margin-top:8px; font-size:0.82em; color:#8b949e;">Snapshot for <code>rufloV3_bootstrap_v4/</code> · 2026-04-15 · Plumbing green end-to-end (Phase 0 BOOT restore live, ADR-007 service lifecycle refactor fixed DB-shutdown bug, vendor overlay ships `saveState/loadState/consolidateTasks/prunePatterns`). <strong>Data-quality pulse <a href="../zz_pulse_check/20260415_0247_pulse_check.md" style="color:#e3b341;">2026-04-15 02:47</a></strong> + follow-up: magic-number quality invention removed from hook-handler (<code>0.8/0.2</code> → neutral <code>0.5</code>); formatter field-name bug fixed in intelligence.cjs. <strong>6 DQ observations catalogued in §12 below</strong>: 1 resolved (local bug), 5 accepted as upstream-owned / expected-behaviour. Ruflo does NOT synthesise values to compensate for upstream output — we call, we trust, we log. See §12 DQ tracking log.</p>
+</div>
+
+<table class="matrix">
+  <thead>
+    <tr>
+      <th style="width:9%;">Cycle stage</th>
+      <th style="width:11%;">Claude-Code hook</th>
+      <th style="width:5%;">Loop</th>
+      <th style="width:7%;">v4 status</th>
+      <th style="width:20%;">Ruflo glue (minimal)</th>
+      <th style="width:48%;">Upstream crate · call · file:line</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td class="cycle-cell">[0] BOOT<small>session warm-up</small></td>
+      <td class="hook-cell">SessionStart<span class="hook-desc">fires once on session open</span></td>
+      <td class="loop-cell">boot</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Phase 0 LIVE 2026-04-15:</strong> daemon auto-spawn, SonaEngine(384), AdaptiveEmbedder (ONNX 378/384 dense), SQLiteBackend init; <strong>state restore via <code>SonaEngine.loadState</code></strong> (vendor-rebuilt @ruvector/sona 0.1.9-ruflo.1). Cross-session smoke verified 3 patterns → kill → boot → 3 patterns restored. Live in prod: <code>[INTELLIGENCE]</code> hook output confirms pattern continuity across sessions.</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> health check · launch warm daemon if absent · read <code>ranked-context.json</code>
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::session_start(id, restore)</span>
+        <span class="ref">crates/ruvllm/src/claude_flow/hooks_integration.rs</span>
+        <span class="pkg sona">LoopCoordinator::new(config)</span>
+        <span class="ref">crates/sona/src/loops/coordinator.rs:12 (props: instant, background, reasoning_bank, ewc, base_lora)</span>
+        <span class="pkg sona">EwcPlusPlus::restore(prev_fisher)</span>
+        <span class="ref">crates/sona/src/ewc.rs:65</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[1] CAPTURE<small>prompt</small></td>
+      <td class="hook-cell">UserPromptSubmit<span class="hook-desc">pre-send: parse prompt, inject context</span></td>
+      <td class="loop-cell loop-A">A</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note">UserPromptSubmit → daemon <code>begin_trajectory</code> → SonaEngine.beginTrajectory; prompt+embedding cached for Phase 6 STORE</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> stdin parse · strip <code>&lt;task-notification&gt;</code> · IPC forward (no session-goal logic)
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::pre_task({ taskId, description })</span> → returns context block
+        <span class="ref">starts TrajectoryRecorder (id, query_embedding, steps[])</span>
+        <span class="pkg sona">LoopCoordinator::on_inference(prompt)</span>
+        <span class="ref">crates/sona/src/loops/coordinator.rs:12</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[2] RETRIEVE<small>k-NN similar</small></td>
+      <td class="hook-cell">UserPromptSubmit<span class="hook-desc">same tick — inline with [1]</span></td>
+      <td class="loop-cell loop-A">A</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note">Canonical symbol (ADR-000-DDD §3.4): <code>SonaEngine.findPatterns(emb, k)</code>. The reactive→adaptive tier cascade is collapsed inside the NAPI at Rust level (engine.rs→coordinator.reasoning_bank.find_similar). Auto-memory PageRank is a parallel ruflo-specific augmentation (rule/constraint surfacing, orthogonal to Phase 2). Trajectory raw-SQL source reverted 2026-04-14 as D1 invention. DQ-02 formatter bug <strong>RESOLVED 2026-04-15</strong> — <code>intelligence.cjs</code> now reads canonical fields (<code>avgQuality/patternType/clusterSize/accessCount</code>). See DQ log §12 below.</span></td>
+      <td>
+        <span class="pkg ruflo">intelligence.cjs</span> receive upstream's <code>similar_patterns</code> · merge with ranked-context · 3-way interleave · format <code>[INTELLIGENCE]</code> block
+      </td>
+      <td>
+        <span class="pkg ruvllm">ReasoningBank::search_similar(prompt, k=5)</span>
+        <span class="ref">crates/ruvllm/src/reasoning_bank/mod.rs — one-call text→HNSW; replaces our 2-step embed+rb_search</span>
+        <span class="pkg ruvllm">IntelligentContextManager</span>
+        <span class="ref">suggested_approach + similarity + rank output</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[3] APPLY<small>route + LoRA</small></td>
+      <td class="hook-cell">UserPromptSubmit<span class="hook-desc">same tick — tier decision</span></td>
+      <td class="loop-cell loop-A">A</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Phase 3 operational via ruflo scope-intentional split:</strong> <code>MicroLoRA</code> adaptation runs silently in <code>instant.on_trajectory → micro_lora.accumulate_gradient()</code> on every closed trajectory. <strong>Routing:</strong> Claude Code's native model selection is the router for v4 (operator prompt → Claude chooses Opus/Sonnet/Haiku). <code>LearnedRouter</code> (ruvector-attention) is an OPTIONAL MoE extension that would overlap with Claude's native routing — deferred pending ADR-006 design. Not a gap: what runs today covers the phase.</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span> — routing happens inside upstream; ruflo just receives the chosen tier in the response
+      </td>
+      <td>
+        <span class="pkg attention">LearnedRouter::route(embedding)</span>
+        <span class="ref">crates/ruvector-attention/src/moe/router.rs:29 (Router trait at :5)</span>
+        <span class="pkg sona">LoopCoordinator.base_lora.forward_layer(delta)</span>
+        <span class="ref">per-step LoRA adaptation from trajectory rewards</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[4] CAPTURE<small>step (pre)</small></td>
+      <td class="hook-cell">PreToolUse<span class="hook-desc">before each tool call (Bash, Edit, etc.)</span></td>
+      <td class="loop-cell loop-A">A</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note">PreToolUse → daemon <code>add_step</code> (SonaEngine.addTrajectoryStep); pre-bash shell-safety regex in hook-handler.cjs (ruflo scope-survivor)</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> pre-bash regex shell-safety (no upstream analog — KEEP) · notification filter · IPC forward
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::pre_edit({ filePath, op })</span> → returns risk + recommendation
+        <span class="ref">crates/ruvllm/src/claude_flow/hooks_integration.rs</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[5] CAPTURE<small>step (post)</small></td>
+      <td class="hook-cell">PostToolUse<span class="hook-desc">after each tool call; may trigger Loop B</span></td>
+      <td class="loop-cell loop-A">A</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note">PostToolUse → <code>add_step</code> with reward ±0.1 based on exitCode; Loop-B gating is upstream-internal (LoopCoordinator.maybe_run_background)</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span> — step + reward emitted inside daemon
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::post_edit({ filePath, success })</span>
+        <span class="ref">appends TrajectoryStep; computes step reward</span>
+        <span class="pkg sona">LoopCoordinator::maybe_run_background()</span>
+        <span class="ref">crates/sona/src/loops/coordinator.rs:12 — buffer-size/time gate → Loop B</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[6] JUDGE<small>verdict</small></td>
+      <td class="hook-cell">Stop / SubagentStop<span class="hook-desc">task completion — trajectory closes</span></td>
+      <td class="loop-cell loop-B">B</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>OQ-2 resolved 2026-04-15 (ADR-005 §7).</strong> Vendor rebuild from v2.1.2 source uses the relaxed <code>min_trajectories</code> threshold; smoke: 3 trajectories → 3 patterns crystallized in <code>forceLearn</code>. VerdictAnalyzer runs inside <code>bank.add_trajectory</code> during <code>run_cycle</code>; smoke-04 (n=120) reaches <code>status: "completed"</code>.</span><span class="dq-note"><span class="dq-flag dq-low">🟩 DQ-01 upstream-owned</span> <code>pattern.avg_quality</code> = <code>mean(trajectory.quality for traj in cluster)</code> per <code>reasoning_bank.rs:186-187</code>. We pass a neutral <code>0.5</code> to <code>SonaEngine.endTrajectory(id, quality)</code> (hook-handler.cjs:218 — previous magic <code>0.8/0.2</code> was invention, removed 2026-04-15). Upstream therefore produces uniform avg_quality≈0.5 with our input. Ruflo does NOT synthesise richer quality; accepting upstream's contract as-is. If flat quality limits learning downstream, root-cause is upstream's <code>extract_patterns</code> not using per-step rewards — not ruflo's concern to patch around. See DQ log §12 below.</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> post-task → IPC <code>post_task(success, agent)</code>. Delete custom <code>adapt_embedder</code> / <code>persistPatternsToAgentDB</code> fan-out.
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::post_task(success, agent)</span>
+        <span class="pkg ruvllm">VerdictAnalyzer::analyze(&amp;trajectory)</span>
+        <span class="ref">crates/ruvllm/src/reasoning_bank/verdicts.rs:314 (fields: recovery_strategies, known_patterns, analysis_count)</span>
+        <span class="ref">outputs: Success / Partial / Failure / RecoveredViaReflection + root_cause + PatternCategory</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[7] DISTILL<small>k-means patterns</small></td>
+      <td class="hook-cell">Stop / SubagentStop<span class="hook-desc">same Loop B tick as [6]</span></td>
+      <td class="loop-cell loop-B">B</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>OQ-2 resolved 2026-04-15 (ADR-005 §7).</strong> Vendor rebuild has relaxed <code>min_trajectories</code>. Smoke-04 (n=120) → <code>2 patterns, status: completed</code>. Small-batch: 3 trajectories also crystallize now. Pattern extraction (k-means over trajectory embeddings) runs inside <code>forceLearn→run_cycle</code>.</span><span class="dq-note"><span class="dq-flag dq-medium">🟧 DQ-03 upstream-hardcoded</span> All patterns persist with <code>pattern_type = "General"</code>. Source-confirmed 2026-04-15: <code>reasoning_bank.rs:208</code> assigns <code>PatternType::General</code> unconditionally (enum has 6 variants — General, Reasoning, Factual, Creative, CodeGen, Conversational — but none of the other 5 are ever assigned by <code>extract_patterns</code>). No setter exists. Upstream limitation; accepted as-is. <span class="dq-flag dq-low" style="margin-left:6px;">🟩 DQ-04 config-expected</span> <code>cluster_size=1</code> universal — config default <code>min_cluster_size=1</code> (reasoning_bank.rs:39) explicitly permits singleton clusters. Not a bug. Self-corrects at N &gt; k_clusters (default 5). See DQ log §12 below.</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span> — distillation entirely upstream
+      </td>
+      <td>
+        <span class="pkg ruvllm">EpisodicMemory::extract_patterns(trajectories)</span>
+        <span class="ref">crates/ruvllm/src/context/episodic_memory.rs:309 — k-means over trajectory embeddings</span>
+        <span class="pkg ruvllm">Pattern::from_trajectory(trajectory)</span>
+        <span class="ref">canonical Pattern constructor — eliminates our _buildPatternForRbStore</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[8] REFINE<small>mincut + GNN</small></td>
+      <td class="hook-cell">Stop / SubagentStop<span class="hook-desc">same Loop B tick (sampled 1-in-N if &gt;budget)</span></td>
+      <td class="loop-cell loop-B">B</td>
+      <td class="status-cell"><span class="cb cb-no">☐</span><span class="cb-note"><strong>Deferred per ADR-ruflo-004 (2026-04-14).</strong> §2 protocol research complete: mincut maps to phases [2,7,8,9,12] + new [4] coherence gate, but payoff needs >1000 trajectories. Five catalog-compliant access paths documented. Re-open trigger: pattern bank &gt;1000 OR OQ-2 resolved OR <code>@ruvector/graph-transformer</code> publishes to npm</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span>
+      </td>
+      <td>
+        <span class="pkg mincut">SparseMask + LambdaDensitySchedule</span>
+        <span class="ref">crates/ruvector-mincut-gated-transformer/src/sparse_attention.rs:97,62</span>
+        <span class="pkg mincut">MinCutPhiEngine</span>
+        <span class="ref">crates/ruvector-consciousness/src/mincut_phi.rs:29 — phi coherence score</span>
+        <span class="pkg gnn">GraphMAE</span>
+        <span class="ref">crates/ruvector-gnn/src/graphmae.rs:271 — self-supervised embedding: mask_nodes, nic_loss, decode+recon</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[9] STORE + TUNE<small>HNSW + regime</small></td>
+      <td class="hook-cell">Stop / SubagentStop<span class="hook-desc">same Loop B tick</span></td>
+      <td class="loop-cell loop-B">B</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Phase 9 operational via C4 + HNSW:</strong> <code>end_trajectory → SQLiteBackend.store</code> (<code>@claude-flow/memory</code>, namespace=ruflo-v4) — verified across restart. <code>HNSW PatternStore</code> auto-upstream inside <code>sona.forceLearn</code>. Live in-session dogfood: entries persist + patterns restored cross-session; all embeddings BLOB 1536 bytes (Float32×384), round-trip L2=1.0. <strong>TUNE side</strong> (prime-radiant RegimeTracker) is optional regime-adaptive tuning, not blocking — deferred per ADR-ruflo-005 (not on npm; defaults from SonaConfig are sufficient).</span><span class="dq-note"><span class="dq-flag dq-low">🟩 DQ-05 write-only in practice</span> <code>access_count = 0</code> universal on both C4 entries AND sona patterns. Retrieval goes via in-memory <code>SonaEngine.findPatterns</code> (not C4 SQL); SessionStart <code>memory_query</code> reads C4 but doesn't mutate counter semantics. Not a bug — expected shape of current wiring. Would become a signal only if cross-session vector-retrieval via C4 gets wired (HybridBackend, postponed per ADR-001). See DQ log §12 below.</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span>
+      </td>
+      <td>
+        <span class="pkg ruvllm">PatternStore::insert(pattern)</span>
+        <span class="ref">crates/ruvllm/src/reasoning_bank/pattern_store.rs — HNSW m=32 ef=200 dim=384</span>
+        <span class="pkg prime">RegimeTracker + TunerState</span>
+        <span class="ref">crates/prime-radiant/src/sona_tuning/tuner.rs:36,12 — adapts SONA hyperparams to regime</span>
+        <span class="pkg prime">WitnessSource + WitnessEntryType</span>
+        <span class="ref">crates/prime-radiant/src/ruvllm_integration/witness.rs:92,103 — verdict audit trail</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[10] CONSOLIDATE<small>10:1 compress</small></td>
+      <td class="hook-cell">SessionEnd<span class="hook-desc">once per Claude-Code session close</span></td>
+      <td class="loop-cell loop-C">C</td>
+      <td class="status-cell"><span class="cb cb-no">☐</span><span class="cb-note"><strong>Re-evaluated 2026-04-15 (ADR-005 §7).</strong> NOT "same NAPI-surface-gap class as [11][12]" as previously claimed — those live in sona (closed 2026-04-15). <code>MemoryCompressor</code> lives in <code>crates/ruvllm/src/context/episodic_memory.rs:154</code>, but the published <code>@ruvector/ruvllm</code> NAPI surface is a <strong>different crate</strong> (<code>examples/ruvLLM/src/napi.rs</code>) and doesn't import it. Exposing requires 3 new JsX wrappers + heavy ruvllm rebuild + unclear downstream consumer (daemon uses SonaEngine trajectories, not ruvllm::Trajectory). <strong>Deferred pending empirical dogfood evidence</strong> per ADR-005 §3 (original re-open trigger: "long-running sessions reveal missing compaction as empirical problem").</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> SessionEnd → IPC <code>session_end(exportMetrics=true)</code>
+      </td>
+      <td>
+        <span class="pkg ruvllm">MemoryCompressor</span>
+        <span class="ref">crates/ruvllm/src/context/episodic_memory.rs:160 — episodic → consolidated @ ~10:1</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[11] FORGET<small>EWC++ Fisher</small></td>
+      <td class="hook-cell">SessionEnd<span class="hook-desc">same SessionEnd tick as [10]</span></td>
+      <td class="loop-cell loop-C">C</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Phase 11 LIVE 2026-04-15 (ADR-005 §7).</strong> Incremental EWC++ runs auto inside <code>force_learn→run_cycle</code>. Cross-task merge via <code>SonaEngine.consolidateTasks</code> — ruflo added <code>#[napi]</code> to <code>EwcPlusPlus::consolidate_all_tasks</code> in vendor rebuild. Daemon <code>session_end</code> calls it before saveState. Verified callable via <code>sona-oq3-napi</code> verify gate.</span><span class="dq-note"><span class="dq-flag dq-low">🟩 DQ-06 upstream-never-triggered</span> <code>ewc_task_count = 0</code> universal. <code>detect_task_boundary</code> upstream doesn't trip in our trajectory stream (probably signal-variance dependent; likely downstream of DQ-01 quality flatness). <code>consolidateTasks</code> is a no-op until a boundary exists. Benign in single-project dogfood. See DQ log §12 below.</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span>
+      </td>
+      <td>
+        <span class="pkg sona">EwcPlusPlus::consolidate(lambda)</span>
+        <span class="ref">crates/sona/src/ewc.rs:65 — <strong>NOT ruvllm.</strong> fields: current_fisher, lambda, task_memory, gradient_mean/var, samples_seen</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[12] PRUNE<small>unused patterns</small></td>
+      <td class="hook-cell">SessionEnd<span class="hook-desc">same SessionEnd tick</span></td>
+      <td class="loop-cell loop-C">C</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Phase 12 LIVE 2026-04-15 (ADR-005 §7).</strong> ruflo added <code>#[napi]</code> to <code>ReasoningBank::prune_patterns(min_quality, min_accesses, max_age_secs)</code> in vendor rebuild. Daemon <code>session_end</code> calls <code>prunePatterns(0.05, 0, 90d)</code> before saveState (conservative defaults; tune if dogfood reveals pain). Verified callable via <code>sona-oq3-napi</code> verify gate.</span></td>
+      <td>
+        <span class="pkg ruflo">— (no glue)</span>
+      </td>
+      <td>
+        <span class="pkg sona">ReasoningBank::prune()</span>
+        <span class="ref">crates/sona/src/reasoning_bank.rs:47 — drops patterns with <code>usage_count &lt; prune_threshold</code> older than <code>max_unused_age_secs</code></span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="cycle-cell">[13] EXPORT<small>metrics</small></td>
+      <td class="hook-cell">SessionEnd<span class="hook-desc">final SessionEnd tick</span></td>
+      <td class="loop-cell loop-C">C</td>
+      <td class="status-cell"><span class="cb cb-ok">☑</span><span class="cb-note"><strong>Wired 2026-04-14:</strong> session_end writes <code>.claude-flow/metrics/session-&lt;ts&gt;.json</code> + stable <code>session-latest.json</code> pointer (v3 convention). Payload: exportedAt, sonaStats, forceLearnMsg, memoryPath, trajectoryCount. <code>ruvllm::HooksIntegration::session_end(exportMetrics=true)</code> remains NAPI-unexposed (same class as OQ-3); this is the local audit-log workaround</span></td>
+      <td>
+        <span class="pkg ruflo">hook-handler.cjs</span> writes session summary to <code>.claude-flow/metrics/*.json</code> (local observability; audit log only)
+      </td>
+      <td>
+        <span class="pkg ruvllm">HooksIntegration::session_end(exportMetrics=true)</span>
+        <span class="ref">crates/ruvllm/src/claude_flow/hooks_integration.rs — emits session metrics</span>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+
+<h2>Hook coverage — v4 ACTUAL wiring (post-2026-04-15)</h2>
+
+<p style="font-size:0.82em; color:#8b949e;">The original Phase-3 proposal table showed v3-today → v4-after as a cutover. v4 IS the "after" state now. This table reflects what <code>.claude/helpers/hook-handler.cjs</code> + <code>ruvector-daemon.mjs</code> actually do in production, with ADR-007 service-lifecycle delegation.</p>
+
+<table class="matrix">
+  <thead>
+    <tr>
+      <th style="width:18%;">Claude-Code hook</th>
+      <th style="width:10%;">Stages served</th>
+      <th style="width:8%;">Loop</th>
+      <th style="width:32%;">ruflo glue (hook-handler.cjs)</th>
+      <th style="width:32%;">Daemon IPC → upstream</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="hook-cell">SessionStart</td>
+      <td>[0] BOOT</td>
+      <td class="loop-cell">boot</td>
+      <td><code>ensureDaemon</code> (socket probe → spawn if absent) · write <code>sessionId</code> to cache · <code>memory_query</code> observability ping · empty-state guardrail log</td>
+      <td>daemon <code>services[]</code> init: <code>memory</code> → <code>createDatabase({provider:'better-sqlite3'})</code>; <code>sona</code> → <code>new SonaEngine(384)</code> + <code>loadState</code> from <code>.claude-flow/sona/state.json</code> (vendor 0.1.9-ruflo.1); <code>embedder</code> → xenova MiniLM-L6-v2 + ONNX probe (ADR-007)</td>
+    </tr>
+    <tr>
+      <td class="hook-cell">UserPromptSubmit</td>
+      <td>[1] CAPTURE · [2] RETRIEVE · [3] APPLY</td>
+      <td class="loop-cell loop-A">A</td>
+      <td>stdin parse · strip <code>&lt;task-notification&gt;</code> · invoke <code>intelligence.cjs</code> · format <code>[INTELLIGENCE]</code> block on stdout</td>
+      <td><code>begin_trajectory</code> → <code>SonaEngine.beginTrajectory(embedding)</code> · <code>find_patterns</code> → <code>SonaEngine.findPatterns(embedding, k=5)</code> · MicroLoRA adaptation silent inside <code>instant.on_trajectory</code> · routing handled natively by Claude Code</td>
+    </tr>
+    <tr>
+      <td class="hook-cell">PreToolUse</td>
+      <td>[4] CAPTURE (pre)</td>
+      <td class="loop-cell loop-A">A</td>
+      <td>pre-bash shell-safety regex (KEEP — no upstream analog; ruflo scope-survivor)</td>
+      <td><code>add_step</code> → <code>SonaEngine.addTrajectoryStep(id, vec, [], reward=0)</code></td>
+    </tr>
+    <tr>
+      <td class="hook-cell">PostToolUse</td>
+      <td>[5] CAPTURE (post)</td>
+      <td class="loop-cell loop-A">A</td>
+      <td>compute reward from exitCode (±0.1) · forward via IPC</td>
+      <td><code>add_step</code> → <code>SonaEngine.addTrajectoryStep</code> with reward · Loop-B gate is upstream-internal (<code>LoopCoordinator.maybe_run_background</code>)</td>
+    </tr>
+    <tr>
+      <td class="hook-cell">Stop / SubagentStop</td>
+      <td>[6] JUDGE · [7] DISTILL · [9] STORE</td>
+      <td class="loop-cell loop-B">B</td>
+      <td>trajectory close: reward → IPC forward</td>
+      <td><code>end_trajectory</code> → <code>SonaEngine.endTrajectory(id, quality)</code> (triggers JUDGE via <code>VerdictAnalyzer</code> + DISTILL via k-means inside <code>run_cycle</code>) · <code>db.store(MemoryEntry)</code> → C4 <code>SQLiteBackend.store</code> (Phase 9 STORE with namespace=ruflo-v4). Phase 8 REFINE mincut deferred (ADR-004).</td>
+    </tr>
+    <tr>
+      <td class="hook-cell">SessionEnd</td>
+      <td>[11] FORGET · [12] PRUNE · [0] SAVE · [13] EXPORT</td>
+      <td class="loop-cell loop-C">C</td>
+      <td>forward <code>session_end</code> IPC · canary hit log</td>
+      <td>daemon <code>services[].onSessionEnd()</code> aggregation (ADR-007): <code>sona.onSessionEnd</code> runs <code>forceLearn → flush → consolidateTasks</code> (Phase 11, vendor NAPI) <code>→ prunePatterns(0.05, 0, 90d)</code> (Phase 12, vendor NAPI) <code>→ saveState</code> (Phase 0 persistence, vendor NAPI) <code>→ metrics export</code> (Phase 13, <code>.claude-flow/metrics/session-&lt;ts&gt;.json</code>). <strong>memory.onSessionEnd is a no-op</strong> — DB stays open for next Claude session (pre-ADR-007 used to call db.shutdown here, silently degrading cross-session C4 storage). Phase 10 CONSOLIDATE (<code>MemoryCompressor</code>) deferred — ruvllm-scope, ADR-005 §7.</td>
+    </tr>
+    <tr>
+      <td class="hook-cell">SIGTERM / SIGINT</td>
+      <td>daemon-scope teardown</td>
+      <td class="loop-cell">—</td>
+      <td>— (signal-driven, no hook involvement)</td>
+      <td>daemon <code>services[].shutdown()</code>: <code>memory.shutdown → db.shutdown()</code>; <code>sona.shutdown</code> = no-op; <code>embedder.shutdown</code> = no-op. Then unlink socket + PID + <code>process.exit(0)</code>. <strong>Single sanctioned DB-close site per ADR-007.</strong></td>
+    </tr>
+    <tr style="background:#21262d;">
+      <td class="hook-cell">Notification</td>
+      <td>— (passthrough)</td>
+      <td class="loop-cell">—</td>
+      <td>parse, dedupe, filter (if wired); otherwise unchanged</td>
+      <td>— UI-layer concern; no learning signal</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Crate ownership summary</h2>
+
+<div class="summary-boxes">
+  <div class="sbox">
+    <h3 class="green">sona (orchestrator + EWC)</h3>
+    <ul>
+      <li>LoopCoordinator — 3 loops</li>
+      <li><strong>EwcPlusPlus</strong> — Fisher/lambda (FORGET)</li>
+      <li>BaseLoRA adaptation</li>
+      <li>ReasoningBank wrapper (prune)</li>
+      <li>TrajectoryBuilder</li>
+    </ul>
+  </div>
+  <div class="sbox">
+    <h3 class="orange">ruvllm (lifecycle + verdicts)</h3>
+    <ul>
+      <li>HooksIntegration (6 lifecycle calls)</li>
+      <li>TrajectoryRecorder</li>
+      <li>VerdictAnalyzer (JUDGE)</li>
+      <li>EpisodicMemory.extract_patterns (DISTILL, k-means)</li>
+      <li>MemoryCompressor (CONSOLIDATE, 10:1)</li>
+      <li>Pattern::from_trajectory</li>
+      <li>PatternStore (HNSW)</li>
+    </ul>
+  </div>
+  <div class="sbox">
+    <h3 class="cyan">ruvector-{gnn, attention, mincut*, consciousness}</h3>
+    <ul>
+      <li><strong>gnn</strong>: GraphMAE self-sup enc.</li>
+      <li><strong>attention</strong>: LearnedRouter (MoE)</li>
+      <li><strong>mincut-gated-transformer</strong>: SparseMask, LambdaDensitySchedule</li>
+      <li><strong>consciousness</strong>: MinCutPhiEngine</li>
+    </ul>
+  </div>
+  <div class="sbox">
+    <h3 class="green">prime-radiant + rvAgent</h3>
+    <ul>
+      <li><strong>prime-radiant</strong>: RegimeTracker, TunerState, WitnessSource</li>
+      <li><strong>rvagent-mcp</strong>: 7 MCP tools (sona_record_step, reasoning_bank_judge, reasoning_bank_search, adaptive_embed_learn, sona_force_background, sona_get_config, sona_flush_instant)</li>
+      <li><strong>pi-brain</strong> (npm): distributed brain-share client</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Ruflo hook surface — projection vs <span style="color:#3fb950;">v4 ACHIEVED (2026-04-15)</span></h2>
+
+<p style="font-size:0.82em; color:#8b949e;">The Phase-3 proposal projected a cutover from 3489 LOC of v3 custom JS to ~850 LOC. v4 was built from scratch to that target — this table now shows the achieved state with the <strong>837 LOC headroom remaining</strong>, plus the 2026-04-15 ADR-007 refactor cost.</p>
+
+<table class="matrix">
+  <thead>
+    <tr>
+      <th style="width:28%;">File</th>
+      <th style="width:12%;">v3 original</th>
+      <th style="width:12%;">P3 target</th>
+      <th style="width:12%;">v4 actual</th>
+      <th style="width:36%;">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>hook-handler.cjs</code></td>
+      <td>1203</td>
+      <td>~300</td>
+      <td class="green"><strong>254</strong></td>
+      <td>stdin JSON event parse · <code>ensureDaemon</code> probe · pre-bash regex · UDS IPC forward · empty-state + ensureDaemon guardrail logs. <strong>Under target.</strong></td>
+    </tr>
+    <tr>
+      <td><code>sona-hook-handler.mjs</code></td>
+      <td>410</td>
+      <td class="red">0 (DELETED)</td>
+      <td class="green"><strong>—</strong></td>
+      <td>Never created in v4. All behaviors live inside the warm daemon.</td>
+    </tr>
+    <tr>
+      <td><code>intelligence.cjs</code></td>
+      <td>531</td>
+      <td>~300</td>
+      <td class="green"><strong>112</strong></td>
+      <td>Two-call IPC (<code>find_patterns</code> + auto-memory PageRank) · <code>[INTELLIGENCE]</code> formatter · empty-state log. <strong>63% under target.</strong> <span class="dq-flag dq-medium">🟧 DQ-MED</span> formatter still shows <code>(0.00) [SONA] pattern [rank #N]</code> — identity field not surfaced.</td>
+    </tr>
+    <tr>
+      <td><code>ruvector-daemon.mjs</code></td>
+      <td>692</td>
+      <td>~250</td>
+      <td class="green"><strong>390</strong></td>
+      <td>services[] array (ADR-007) · IPC server · <code>onnx-embedder</code> xenova monkey-patch · C4 STORE in <code>end_trajectory</code> · session_end aggregation · metrics export. Over the original target by ~140 LOC but inside the 850 total-cap with comfortable margin. <strong>ADR-007 refactor cost: +17 LOC net.</strong></td>
+    </tr>
+    <tr style="background:#21262d;">
+      <td><strong>JS total</strong></td>
+      <td><strong class="red">3489</strong></td>
+      <td><strong>~850 cap</strong></td>
+      <td class="green"><strong>756</strong></td>
+      <td><strong class="highlight">−2733 LOC vs v3 (−78%) · 94 LOC under cap (11% headroom) · 25/25 verify gates</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>NAPI reality — <code>vendor/@ruvector/sona/</code> overlay (ADR-005 §7, 2026-04-15)</h2>
+
+<p style="font-size:0.82em; color:#8b949e;"><em>Historical note:</em> the Phase-3 proposal anticipated building a local <code>crates/ruvflo-ruvllm-ext</code> wrapper crate with <code>JsLoopCoordinator</code> + <code>JsReasoningBank.default()</code> + <code>JsPattern.fromTrajectory</code>. That crate <strong>was never created</strong> — ADR-ruflo-002 (2026-04-13, amended 2026-04-15) resolved the problem by using published <code>@ruvector/sona</code> directly. v4's actual NAPI surface is the published <code>SonaEngine</code> + three methods ruflo added back via a vendor-overlay rebuild from upstream source.</p>
+
+<div class="summary-boxes" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="sbox">
+    <h3 class="green">vendor @ruvector/sona (0.1.9-ruflo.1)</h3>
+    <ul>
+      <li><code>sona.linux-x64-gnu.node</code> (706 KB)</li>
+      <li><code>index.js</code> (loader)</li>
+      <li><code>index.d.ts</code> (hand-maintained)</li>
+      <li><code>package.json</code> (marker)</li>
+      <li>Rebuilt via <code>scripts/rebuild-sona.sh</code></li>
+      <li>Overlay copied into target's <code>node_modules/@ruvector/sona/</code> by bootstrap</li>
+    </ul>
+  </div>
+  <div class="sbox">
+    <h3 class="green">new #[napi] exposures (fixes #274 + OQ-3)</h3>
+    <ul>
+      <li><code>SonaEngine.saveState() → string</code> (Phase 0)</li>
+      <li><code>SonaEngine.loadState(json) → u32</code> (Phase 0)</li>
+      <li><code>SonaEngine.consolidateTasks()</code> (Phase 11)</li>
+      <li><code>SonaEngine.prunePatterns(minQ, minA, maxAgeSecs)</code> (Phase 12)</li>
+      <li>Added by ruflo at <code>_UPSTREAM_.../crates/sona/src/napi_simple.rs</code> (≈30 LOC 1:1 wrapper, zero invented semantics)</li>
+    </ul>
+  </div>
+  <div class="sbox">
+    <h3 class="orange">Still NAPI-gap (deferred)</h3>
+    <ul>
+      <li><code>MemoryCompressor</code> — Phase 10 CONSOLIDATE. Lives in <code>crates/ruvllm</code> but its NAPI bridge is in the separate <code>examples/ruvLLM/</code> crate and doesn't import it. Requires 3 new JsX wrappers + heavy rebuild + unclear consumer.</li>
+      <li>Evaluated 2026-04-15, deferred pending dogfood forcing function (ADR-005 §7).</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Risks &amp; gates</h2>
+
+<table class="matrix">
+  <thead>
+    <tr>
+      <th style="width:30%;">Risk</th>
+      <th style="width:30%;">Mitigation</th>
+      <th style="width:40%;">Verification gate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Daemon-scope resources closed at SessionEnd (DB, socket, etc.)</td><td>ADR-ruflo-007 services lifecycle: <code>session_end</code> never calls <code>shutdown()</code>; only SIGTERM does</td><td class="green">verify gate <code>no-db-shutdown-in-session_end</code> + smoke probes <code>status</code> post-SessionEnd for memory.error</td></tr>
+    <tr><td>Daemon spawn heavy (embedder ONNX warm-up ~1s)</td><td>Singleton in warm daemon; <code>ensureDaemon</code> probes socket before spawn</td><td class="green">p99 hook latency 1032ms (cold boot one-time), p50 warm 14ms</td></tr>
+    <tr><td>Embedder hash-poisoning if ONNX WASM absent</td><td>Monkey-patch <code>ruvector/dist/core/onnx-embedder.js</code> with <code>@xenova/transformers</code> pipeline (feedback_onnx_xenova.md)</td><td class="green">boot probe asserts 50%+ non-zero; current 98% dense confirms real ONNX</td></tr>
+    <tr><td>Pre-bash regex has no upstream analog</td><td>Keep in <code>hook-handler.cjs</code> (ruflo scope-survivor)</td><td class="green">verify.sh gate 2 (no-reinvention), gate 9 (observability)</td></tr>
+    <tr><td>Vendor overlay drift vs upstream source</td><td>Reproducible build via <code>scripts/rebuild-sona.sh</code>; `.so` committed under <code>vendor/</code> so target installs don't need rust toolchain</td><td class="green">verify gates <code>sona-vendor</code>, <code>sona-phase0-napi</code>, <code>sona-oq3-napi</code></td></tr>
+    <tr><td>Reward signal flatness (<span class="dq-flag dq-high">🟥 DQ-HIGH</span>)</td><td><strong>Not yet mitigated.</strong> All trajectories crystallize with <code>avg_quality=0.80</code> — no gradient for differentiated learning</td><td class="val" style="color:#f85149;">No gate today. Trace <code>hook-handler.cjs → daemon.end_trajectory → sona.endTrajectory(quality)</code>; find where the uniform 0.80 is introduced.</td></tr>
+    <tr><td><code>MinCutPhiEngine</code> may be too expensive per Loop-B tick</td><td>Deferred per ADR-ruflo-004 pending pattern bank &gt;1000 OR graph-transformer npm publish</td><td>N/A while deferred</td></tr>
+    <tr><td><code>MemoryCompressor</code> NAPI bridge (ruvllm-scope)</td><td>Deferred per ADR-ruflo-005 §7 pending empirical dogfood evidence of unbounded episode growth</td><td>N/A while deferred</td></tr>
+  </tbody>
+</table>
+
+<h2 id="dq-log">§12 · DQ tracking log — issues observed + resolutions</h2>
+
+<p style="font-size:0.82em; color:#8b949e;">Persistent ledger of Data-Quality observations surfaced by pulse checks. <strong>Policy:</strong> ruflo is a thin adapter; we call upstream directly with neutral defaults, trust the returned results as-is, and log what we see. We do NOT invent formulas, aggregations, or hidden helpers to compensate for upstream behaviour (per <code>_memory/feedback_v4_embedder_bypass.md</code>). When upstream's behaviour is unexpected, the root cause is traced to the upstream symbol, documented here, and either accepted or reported — <em>never patched around in the adapter</em>. Add new rows at the bottom; never rewrite history.</p>
+
+<table class="matrix">
+  <thead>
+    <tr>
+      <th style="width:6%;">ID</th>
+      <th style="width:10%;">Discovered</th>
+      <th style="width:8%;">Severity</th>
+      <th style="width:12%;">Phase / symbol</th>
+      <th style="width:25%;">Observed</th>
+      <th style="width:22%;">Root cause (upstream source)</th>
+      <th style="width:17%;">Resolution / status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>DQ-01</strong></td>
+      <td>2026-04-15 pulse 02:47</td>
+      <td><span class="dq-flag dq-low">🟩 LOW</span></td>
+      <td>[6] JUDGE / [7] DISTILL · <code>sona.endTrajectory(id, quality)</code></td>
+      <td><code>pattern.avg_quality = 0.80</code> universal across all 21 persisted entries (smokes + real). Pre-fix: hook-handler.cjs:218 passed <code>reward: success ? 0.8 : 0.2</code> (magic-numbers invention).</td>
+      <td><code>reasoning_bank.rs:186-187</code>: <code>total_weight = sum(t.quality)</code>, <code>avg_quality = total_weight / cluster_size</code>. Upstream derives avg_quality directly from <code>trajectory.quality</code> passed by caller — no step-reward aggregation at the upstream level.</td>
+      <td><strong>2026-04-15 adapter side:</strong> removed magic numbers from hook-handler.cjs:218, now passes neutral <code>0.5</code>. Daemon passthrough <code>sona.endTrajectory(id, c.reward ?? 0.5)</code>. Result: uniform ~0.5 avg_quality (trusted upstream output, not our concern to patch). <strong>Upstream-owned</strong> follow-up if ever needed: extend <code>extract_patterns</code> to use step rewards directly (not our scope).</td>
+    </tr>
+    <tr>
+      <td><strong>DQ-02</strong></td>
+      <td>2026-04-15 pulse 02:47</td>
+      <td><span class="dq-flag dq-low">🟩 RESOLVED</span></td>
+      <td>[2] RETRIEVE · <code>intelligence.cjs</code> formatter</td>
+      <td><code>[INTELLIGENCE]</code> block rendered every retrieved pattern as <code>(0.00) [SONA] pattern [rank #N]</code>. Score always zero, identity never visible.</td>
+      <td>Local bug, not upstream. Formatter read <code>h.successRate / h.score / h.type / h.useCount</code>, none of which exist in <code>JsLearnedPattern</code>. Upstream returns canonical camelCase: <code>id, centroid, clusterSize, totalWeight, avgQuality, createdAt, lastAccessed, accessCount, patternType</code>.</td>
+      <td><strong>RESOLVED 2026-04-15:</strong> <code>intelligence.cjs</code> now reads upstream's real fields (<code>avgQuality/patternType/clusterSize/accessCount</code>). Output shape: <code>(0.50) [SONA] general (cluster=1, access=0) [rank #N]</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>DQ-03</strong></td>
+      <td>2026-04-15 pulse 02:47 · updated PM</td>
+      <td><span class="dq-flag dq-medium">🟧 MED</span></td>
+      <td>[7] DISTILL · <code>PatternType</code></td>
+      <td>All persisted patterns have <code>pattern_type = "General"</code>. Upstream <code>PatternType</code> enum has 6 variants (General, Reasoning, Factual, Creative, CodeGen, Conversational) — only General is ever seen.</td>
+      <td><code>reasoning_bank.rs:208</code> hardcoded: <code>pattern_type: PatternType::General,</code>. No setter; no conditional assignment anywhere in the extract_patterns path. Confirmed 2026-04-15 via exhaustive grep in <code>crates/sona/src/</code> AND 5-layer §2 protocol (foxref + pi-brain + gitnexus 225k/442k edges + catalog 3-path + source). <strong>Zero bindings across all access paths.</strong></td>
+      <td><strong>PARTIAL WORKAROUND AVAILABLE (added 2026-04-15 PM):</strong> analysis_v2 identified that <code>ruvector.classifyChange(commitMsg, diffContent)</code> — a real upstream classifier returning <code>feature/bugfix/refactor/docs/test/config/unknown</code> — can be called from hook-handler at Stop/SubagentStop. Output feeds MemoryEntry <code>tags</code> field (pre-existing C4 contract, zero invention). Gives usable categorical signal at the C4-storage level even though upstream's own <code>pattern_type</code> stays "General". <strong>Full fix</strong> still requires Option B (NAPI rebuild exposing VerdictAnalyzer) per ADR-005 §7 forcing function.</td>
+    </tr>
+    <tr>
+      <td><strong>DQ-04</strong></td>
+      <td>2026-04-15 pulse 02:47</td>
+      <td><span class="dq-flag dq-low">🟩 LOW</span></td>
+      <td>[7] DISTILL · cluster_size</td>
+      <td>All 8 patterns have <code>cluster_size = 1</code>. Every trajectory becomes its own singleton cluster.</td>
+      <td>NOT a bug. Upstream config default <code>PatternConfig.min_cluster_size = 1</code> (<code>reasoning_bank.rs:39</code>) explicitly allows singletons. With N &lt; <code>k_clusters</code> (default 5), k-means produces N clusters of size 1.</td>
+      <td><strong>Accepted 2026-04-15:</strong> self-corrects as corpus grows (N &gt; k_clusters). No action.</td>
+    </tr>
+    <tr>
+      <td><strong>DQ-05</strong></td>
+      <td>2026-04-15 pulse 02:47</td>
+      <td><span class="dq-flag dq-low">🟩 LOW</span></td>
+      <td>[9] STORE · C4 <code>access_count</code></td>
+      <td><code>access_count = 0</code> on all 14 C4 entries and on all sona patterns — counter never increments.</td>
+      <td>Expected wiring. Ruflo's retrieval path uses <code>SonaEngine.findPatterns</code> (in-memory reasoning bank, not C4 SQL). The SessionStart <code>memory_query</code> observability ping reads C4 but doesn't semantically count as an access. Whether <code>findPatterns</code> itself bumps an in-memory counter that survives <code>saveState</code> round-trip is unchecked (follow-up if ever interesting).</td>
+      <td><strong>Accepted 2026-04-15:</strong> write-only C4 is consistent with ADR-001 (HybridBackend vector-axis postponed). Revisit if cross-session vector retrieval becomes a feature.</td>
+    </tr>
+    <tr>
+      <td><strong>DQ-06</strong></td>
+      <td>2026-04-15 pulse 02:47</td>
+      <td><span class="dq-flag dq-low">🟩 LOW</span></td>
+      <td>[11] FORGET · <code>ewc_task_count</code></td>
+      <td><code>ewc_task_count = 0</code> in every state.json snapshot across 8 sessions. <code>detect_task_boundary</code> upstream never triggers.</td>
+      <td>Probable downstream of DQ-01: <code>detect_task_boundary</code> (in <code>crates/sona/src/loops/background.rs::run_cycle</code>) depends on signal variance that doesn't exist when all trajectories have uniform quality. Might activate if trajectories diversify across projects. Not independently traced yet.</td>
+      <td><strong>Accepted 2026-04-15:</strong> monitor over time. Re-visit if long-running heterogeneous-project dogfood also shows ewc_task_count=0.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top:14px; font-size:0.82em; color:#8b949e;"><strong>Next DQ pulse:</strong> after hook-handler magic-number removal lands in ≥1 full real Claude session, re-pulse to confirm avg_quality distribution remains centred around 0.5 (expected: it WILL still be flat because we now pass a neutral constant; the observation is consistent with the "we trust upstream" stance). DQ-01 severity downgrade to LOW is conditional on this confirmation. Add a new row here for any new finding; never rewrite existing rows.</p>
+
+<p class="footer-note">
+Generated 2026-04-13 · status updated 2026-04-15 across AM / PM / late-PM rounds. AM: Phase 0 BOOT + Phase 11 FORGET + Phase 12 PRUNE + OQ-2 flipped to ☑ via local NAPI rebuild per ADR-005 §7. PM: ADR-007 daemon service lifecycle refactor fixes DB-shutdown bug. Phase 3 APPLY + Phase 9 STORE+TUNE re-classified ☑. Still ☐: Phase 8 REFINE mincut (ADR-004) + Phase 10 CONSOLIDATE (ADR-005 §7). Late-PM (hive §2 complete + v2 analysis): <strong style="color:#e3b341;">ruvector exports analysis_v2</strong> identified 11+ unused Tier 1/2 exports (IntelligenceEngine, NeuralSubstrate, FastAgentDB, code-analysis cluster) accessible WITHOUT rebuild. DQ-03 partial workaround via <code>classifyChange</code> → MemoryEntry tags. 6 DQ observations catalogued in §12 above. Policy enforced: two-sided "never invent + use upstream liberally" per <code>_memory/feedback_upstream_trust_no_invention.md</code>. Details in <code>_doc/zz_pulse_check/20260415_1320_pulse_check_v2.md</code> + <code>_doc/analysis/20260415_ruvector_usage_analysis_v2.md</code> + <code>_doc/visual-summary_v4.html</code>. · Authoritative: <code>_doc/TODO.md</code> + <code>_doc/adr/005-v4-alpha-published-npm-only.md</code> + <code>_doc/adr/007-daemon-service-lifecycle.md</code> · Supersedes v1 (8-phase invention) and v2 (loop-box layout).
+</p>
+
+</body>
+</html>

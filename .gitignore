@@ -1,0 +1,27 @@
+# Build
+/crates/**/target/
+node_modules/
+*.log
+*.pid
+# ruflo's scratch dir for the @napi-rs/cli used to build vendor/ overlays.
+# Only needed when rebuilding the overlay; runtime doesn't touch it.
+/build-tools/
+
+# Runtime state (never committed — daemon re-seeds)
+.claude-flow/sona/
+.reasoning_bank_patterns
+.swarm/
+.ruvector/
+.claude-flow/pids/
+.claude-flow/metrics/
+.claude-flow/learning/
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db
+*.hnsw
+*.hnsw.mappings.json
+
+# Secrets
+.env
+.env.*
+!.env.pi-key.example

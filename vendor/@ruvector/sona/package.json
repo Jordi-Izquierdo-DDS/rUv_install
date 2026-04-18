@@ -1,0 +1,32 @@
+{
+  "name": "@ruvector/sona",
+  "version": "0.1.9-ruflo.1",
+  "description": "Self-Optimizing Neural Architecture (SONA) — ruflo v4 local build from upstream v2.1.2 source. Adds saveState/loadState (fixes #274) missing in published 0.1.5.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "binaryName": "sona",
+    "targets": [
+      "x86_64-unknown-linux-gnu"
+    ]
+  },
+  "keywords": [
+    "sona",
+    "ruvector",
+    "ruflo-vendored"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/ruvector.git",
+    "directory": "npm/packages/sona"
+  },
+  "engines": {
+    "node": ">= 16"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@ruvector/ruvllm-native",
+  "version": "2.1.2-ruflo.1",
+  "description": "NAPI binding for ruvllm ReasoningBank + VerdictAnalyzer (ruflo Fix 18)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": { "triples": { "defaults": false, "additional": ["x86_64-unknown-linux-gnu"] } }
+}

@@ -1,0 +1,234 @@
+diff --git a/crates/ruvllm/Cargo.toml b/crates/ruvllm/Cargo.toml
+index 322cd0f6..5969d622 100644
+--- a/crates/ruvllm/Cargo.toml
++++ b/crates/ruvllm/Cargo.toml
+@@ -88,6 +88,10 @@ half = "2.4"
+ # Memory mapping for efficient large file access (optional)
+ memmap2 = { version = "0.9", optional = true }
+ 
++# NAPI dependencies (optional — ruflo Fix 18)
++napi = { version = "2.16", optional = true }
++napi-derive = { version = "2.16", optional = true }
++
+ # SHA256 hashing for model integrity verification
+ sha2 = "0.10"
+ 
+@@ -135,6 +139,9 @@ gnn = ["dep:ruvector-gnn"]
+ # Full Ruvector integration (all optional crates)
+ ruvector-full = ["attention", "graph", "gnn"]
+ 
++# NAPI binding (ruflo Fix 18 — VerdictAnalyzer + PatternStore for Node.js)
++napi = ["dep:napi", "dep:napi-derive"]
++
+ # Multi-threaded GEMM/GEMV with rayon (4-6x speedup on M4 Pro 10-core)
+ parallel = ["dep:rayon"]
+ 
+@@ -182,7 +189,7 @@ hybrid-ane = ["metal-compute", "coreml"]
+ # mistral-rs-cuda = ["mistral-rs", "mistralrs/cuda"]
+ 
+ [lib]
+-crate-type = ["rlib"]
++crate-type = ["cdylib", "rlib"]
+ 
+ # Benchmark configurations
+ [[bench]]
+diff --git a/crates/ruvllm/src/lib.rs b/crates/ruvllm/src/lib.rs
+index 93a61548..f74c7c4b 100644
+--- a/crates/ruvllm/src/lib.rs
++++ b/crates/ruvllm/src/lib.rs
+@@ -116,6 +116,9 @@
+ #![allow(clippy::assertions_on_constants)]
+ #![allow(clippy::if_same_then_else)]
+ 
++#[cfg(feature = "napi")]
++mod napi_simple;
++
+ pub mod adapter_manager;
+ pub mod autodetect;
+ pub mod backends;
+diff --git a/crates/sona/src/napi.rs b/crates/sona/src/napi.rs
+index 7ecd5293..e712ebbd 100644
+--- a/crates/sona/src/napi.rs
++++ b/crates/sona/src/napi.rs
+@@ -257,6 +257,8 @@ pub struct JsLearnedPattern {
+     pub access_count: u32,
+     /// Pattern type
+     pub pattern_type: String,
++    /// Model route from trajectory (Fix 17)
++    pub model_route: Option<String>,
+ }
+ 
+ impl From<LearnedPattern> for JsLearnedPattern {
+@@ -271,6 +273,7 @@ impl From<LearnedPattern> for JsLearnedPattern {
+             last_accessed: pattern.last_accessed.to_string(),
+             access_count: pattern.access_count,
+             pattern_type: format!("{:?}", pattern.pattern_type),
++            model_route: pattern.model_route.clone(),
+         }
+     }
+ }
+diff --git a/crates/sona/src/napi_simple.rs b/crates/sona/src/napi_simple.rs
+index 2a4692e4..7492030c 100644
+--- a/crates/sona/src/napi_simple.rs
++++ b/crates/sona/src/napi_simple.rs
+@@ -215,6 +215,53 @@ impl SonaEngine {
+     pub fn is_enabled(&self) -> bool {
+         self.inner.is_enabled()
+     }
++
++    /// Serialize engine state to JSON for persistence
++    /// @returns State JSON string that can be passed to loadState()
++    #[napi]
++    pub fn save_state(&self) -> String {
++        self.inner.coordinator().serialize_state()
++    }
++
++    /// Restore engine state from JSON
++    /// @param state_json - JSON string from saveState()
++    /// @returns Number of patterns restored
++    #[napi]
++    pub fn load_state(&self, state_json: String) -> u32 {
++        match self.inner.coordinator().load_state(&state_json) {
++            Ok(n) => n as u32,
++            Err(e) => {
++                eprintln!("SONA load_state error: {}", e);
++                0
++            }
++        }
++    }
++
++    // ─── Added by ruflo v4 rebuild — OQ-3 NAPI surface gap ──────────────────
++    // Underlying Rust symbols exist + public in v2.1.2 but lack #[napi]
++    // annotations. The 1:1 passthroughs below expose them to Node.js. Callers
++    // read getStats() before/after if they need deltas (no invented return
++    // semantics). See ruflo doc/adr/005-v4-alpha-published-npm-only.md §3.
++
++    /// Phase 11 FORGET — merge Fisher information across all EWC tasks into one
++    /// consolidated snapshot. Reduces task_count and memory footprint.
++    #[napi]
++    pub fn consolidate_tasks(&self) {
++        self.inner.coordinator().ewc().write().consolidate_all_tasks();
++    }
++
++    /// Phase 12 PRUNE — drop low-quality/stale patterns from reasoning bank.
++    /// @param min_quality   - avg_quality threshold below which a pattern is dropped
++    /// @param min_accesses  - access_count threshold (drop if below)
++    /// @param max_age_secs  - age in seconds beyond which a pattern is dropped
++    #[napi]
++    pub fn prune_patterns(&self, min_quality: f64, min_accesses: u32, max_age_secs: u32) {
++        self.inner
++            .coordinator()
++            .reasoning_bank()
++            .write()
++            .prune_patterns(min_quality as f32, min_accesses, max_age_secs as u64);
++    }
+ }
+ 
+ /// SONA configuration for Node.js
+@@ -267,6 +314,8 @@ pub struct JsLearnedPattern {
+     pub access_count: u32,
+     /// Pattern type
+     pub pattern_type: String,
++    /// Model route from trajectory (which agent was chosen) — Fix 17
++    pub model_route: Option<String>,
+ }
+ 
+ impl From<LearnedPattern> for JsLearnedPattern {
+@@ -281,6 +330,7 @@ impl From<LearnedPattern> for JsLearnedPattern {
+             last_accessed: pattern.last_accessed.to_string(),
+             access_count: pattern.access_count,
+             pattern_type: format!("{:?}", pattern.pattern_type),
++            model_route: pattern.model_route.clone(),
+         }
+     }
+ }
+diff --git a/crates/sona/src/reasoning_bank.rs b/crates/sona/src/reasoning_bank.rs
+index c117f59f..8416f1c7 100644
+--- a/crates/sona/src/reasoning_bank.rs
++++ b/crates/sona/src/reasoning_bank.rs
+@@ -69,6 +69,8 @@ struct TrajectoryEntry {
+     cluster: Option<usize>,
+     /// Original trajectory ID
+     _trajectory_id: u64,
++    /// Model route taken (Fix 17 — propagate to LearnedPattern)
++    model_route: Option<String>,
+ }
+ 
+ impl ReasoningBank {
+@@ -93,6 +95,7 @@ impl ReasoningBank {
+             quality: trajectory.final_quality,
+             cluster: None,
+             _trajectory_id: trajectory.id,
++            model_route: trajectory.model_route.clone(),
+         };
+ 
+         // Enforce capacity
+@@ -196,6 +199,15 @@ impl ReasoningBank {
+             let now = crate::time_compat::SystemTime::now()
+                 .duration_since_epoch()
+                 .as_secs();
++            // Fix 17: propagate most-voted model_route from cluster members
++            let mut route_counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
++            for m in &members {
++                if let Some(ref r) = m.model_route {
++                    *route_counts.entry(r.as_str()).or_insert(0) += 1;
++                }
++            }
++            let best_route = route_counts.into_iter().max_by_key(|(_, c)| *c).map(|(r, _)| r.to_string());
++
+             let pattern = LearnedPattern {
+                 id: pattern_id,
+                 centroid,
+@@ -206,6 +218,7 @@ impl ReasoningBank {
+                 last_accessed: now,
+                 access_count: 0,
+                 pattern_type: PatternType::General,
++                model_route: best_route,
+             };
+ 
+             self.patterns.insert(pattern_id, pattern.clone());
+diff --git a/crates/sona/src/types.rs b/crates/sona/src/types.rs
+index 1d647f96..bf0fc381 100644
+--- a/crates/sona/src/types.rs
++++ b/crates/sona/src/types.rs
+@@ -228,6 +228,8 @@ pub struct LearnedPattern {
+     pub access_count: u32,
+     /// Pattern type/category
+     pub pattern_type: PatternType,
++    /// Model route — most-voted route from cluster trajectories (Fix 17)
++    pub model_route: Option<String>,
+ }
+ 
+ /// Pattern classification
+@@ -271,6 +273,7 @@ impl LearnedPattern {
+             last_accessed: now,
+             access_count: 0,
+             pattern_type: PatternType::default(),
++            model_route: None,
+         }
+     }
+ 
+@@ -297,6 +300,7 @@ impl LearnedPattern {
+             last_accessed: self.last_accessed.max(other.last_accessed),
+             access_count: self.access_count + other.access_count,
+             pattern_type: self.pattern_type.clone(),
++            model_route: self.model_route.clone().or_else(|| other.model_route.clone()),
+         }
+     }
+ 
+@@ -542,6 +546,7 @@ mod tests {
+             last_accessed: 200,
+             access_count: 5,
+             pattern_type: PatternType::General,
++            model_route: None,
+         };
+ 
+         let p2 = LearnedPattern {
+@@ -554,6 +559,7 @@ mod tests {
+             last_accessed: 250,
+             access_count: 3,
+             pattern_type: PatternType::General,
++            model_route: None,
+         };
+ 
+         let merged = p1.merge(&p2);
