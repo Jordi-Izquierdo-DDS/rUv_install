@@ -137,32 +137,30 @@
   <text x="115" y="150" text-anchor="middle" fill="#8b949e" font-size="11" font-family="sans-serif">REFINE (mincut/GNN)</text>
   <text x="115" y="165" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">deferred · ADR-004</text>
 
-  <!-- ═══ ARROWS: circular arcs r=280 around cx=400 cy=370 ═══ -->
+  <!-- ═══ ARROWS: arcs connecting center of node borders facing the circle ═══ -->
+  <!-- Node centers and edge midpoints calculated for clean connections -->
 
-  <!-- 1→2: CAPTURE → RETRIEVE -->
-  <path d="M 490 80 A 280 280 0 0 1 620 145" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 1→2: CAPTURE right-edge(490,79) → RETRIEVE left-edge(590,159) -->
+  <path d="M 490 79 A 260 260 0 0 1 590 159" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 2→3: RETRIEVE → ROUTE -->
-  <path d="M 750 188 A 280 280 0 0 1 760 290" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 2→3: RETRIEVE bottom-edge(685,188) → ROUTE top-edge(700,290) -->
+  <path d="M 685 188 A 260 260 0 0 1 700 290" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 3→4: ROUTE → EXECUTE -->
-  <path d="M 760 348 A 280 280 0 0 1 750 450" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="775" y="400" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
+  <!-- 3→4: ROUTE bottom-edge(700,348) → EXECUTE top-edge(685,450) -->
+  <path d="M 700 348 A 260 260 0 0 1 685 450" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 4→5: EXECUTE → JUDGE -->
-  <path d="M 620 508 A 280 280 0 0 1 490 575" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="570" y="550" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
+  <!-- 4→5: EXECUTE left-edge(590,479) → JUDGE right-edge(490,589) -->
+  <path d="M 590 479 A 260 260 0 0 1 490 589" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 5→6: JUDGE → LEARN -->
-  <path d="M 310 595 A 280 280 0 0 1 190 510" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 5→6: JUDGE left-edge(310,589) → LEARN right-edge(210,486) -->
+  <path d="M 310 589 A 260 260 0 0 1 210 486" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 6→7: LEARN → PERSIST -->
-  <path d="M 50 450 A 280 280 0 0 1 30 348" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="15" y="400" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
+  <!-- 6→7: LEARN top-edge(115,450) → PERSIST bottom-edge(100,348) -->
+  <path d="M 115 450 A 260 260 0 0 1 100 348" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 7→(gap)→1: PERSIST → [REFINE gap] → CAPTURE (IMPROVEMENT ARC) -->
-  <path d="M 30 290 A 280 280 0 0 1 310 70" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="130" y="100" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES ↑</text>
+  <!-- 7→1: PERSIST top-edge(100,290) → through REFINE gap → CAPTURE left-edge(310,79) -->
+  <path d="M 100 290 A 260 260 0 0 1 310 79" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="145" y="108" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
