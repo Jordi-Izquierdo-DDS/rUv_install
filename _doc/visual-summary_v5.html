@@ -46,8 +46,8 @@
 
 <h2>1. Self-Learning Self-Improving Cycle</h2>
 
-<svg viewBox="0 0 800 800" style="max-width:800px; margin:24px auto; display:block;" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="800" rx="12" fill="#161b22" stroke="#30363d"/>
+<svg viewBox="0 0 800 850" style="max-width:800px; margin:24px auto; display:block;" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="850" rx="12" fill="#161b22" stroke="#30363d"/>
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#58a6ff"/></marker>
     <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3fb950"/></marker>
@@ -110,27 +110,27 @@
   <text x="685" y="484" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">Agent works · steps tracked</text>
   <text x="685" y="498" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">gradient quality (1-fails/steps)</text>
 
-  <!-- 5. JUDGE (bottom, 180°) — Phase 6 -->
-  <rect x="310" y="560" width="180" height="58" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
-  <text x="480" y="573" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
-  <text x="400" y="580" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold" font-family="sans-serif">5. JUDGE</text>
-  <text x="400" y="594" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">VerdictAnalyzer (Rust NAPI)</text>
-  <text x="400" y="608" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">ruvllm-native · root cause + lessons</text>
+  <!-- 5. JUDGE (bottom, 180° → center at 400,660) — Phase 6 -->
+  <rect x="310" y="630" width="180" height="58" rx="8" fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+  <text x="480" y="643" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
+  <text x="400" y="650" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold" font-family="sans-serif">5. JUDGE</text>
+  <text x="400" y="664" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">VerdictAnalyzer (Rust NAPI)</text>
+  <text x="400" y="678" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">ruvllm-native · root cause + lessons</text>
 
-  <!-- 6. LEARN (bottom-left, 225°) — Phase 7+11+12 -->
-  <rect x="20" y="450" width="190" height="72" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
-  <text x="200" y="463" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
-  <text x="115" y="470" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">6. LEARN</text>
-  <text x="115" y="484" text-anchor="middle" fill="#c9d1d9" font-size="8" font-family="sans-serif">A: MicroLoRA · B: k-means→BaseLoRA</text>
-  <text x="115" y="496" text-anchor="middle" fill="#c9d1d9" font-size="8" font-family="sans-serif">C: EWC++ (anti-forgetting)</text>
-  <text x="115" y="512" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">sona NAPI (vendor rebuild)</text>
+  <!-- 6. LEARN (bottom-left, 225° → center at 195,575) — Phase 7+11+12 -->
+  <rect x="100" y="540" width="190" height="72" rx="8" fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="280" y="553" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
+  <text x="195" y="560" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">6. LEARN</text>
+  <text x="195" y="574" text-anchor="middle" fill="#c9d1d9" font-size="8" font-family="sans-serif">A: MicroLoRA · B: k-means→BaseLoRA</text>
+  <text x="195" y="586" text-anchor="middle" fill="#c9d1d9" font-size="8" font-family="sans-serif">C: EWC++ (anti-forgetting)</text>
+  <text x="195" y="602" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">sona NAPI (vendor rebuild)</text>
 
-  <!-- 7. PERSIST (left, 270°) — Phase 9+10+13 -->
-  <rect x="10" y="290" width="180" height="58" rx="8" fill="#0d1117" stroke="#d2a8ff" stroke-width="2"/>
-  <text x="180" y="303" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
-  <text x="100" y="310" text-anchor="middle" fill="#d2a8ff" font-size="12" font-weight="bold" font-family="sans-serif">7. PERSIST</text>
-  <text x="100" y="324" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">sona+rbank+SQL+TC+intel</text>
-  <text x="100" y="338" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">5 layers · cross-session</text>
+  <!-- 7. PERSIST (left, 270° → center at 110,370) — Phase 9+10+13 -->
+  <rect x="15" y="340" width="180" height="58" rx="8" fill="#0d1117" stroke="#d2a8ff" stroke-width="2"/>
+  <text x="185" y="353" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold" font-family="sans-serif">100%</text>
+  <text x="105" y="360" text-anchor="middle" fill="#d2a8ff" font-size="12" font-weight="bold" font-family="sans-serif">7. PERSIST</text>
+  <text x="105" y="374" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">sona+rbank+SQL+TC+intel</text>
+  <text x="105" y="388" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">5 layers · cross-session</text>
 
   <!-- GAP: REFINE (left of IMPROVES arc) — Phase 8, deferred ADR-004 -->
   <rect x="15" y="210" width="155" height="35" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
@@ -140,27 +140,33 @@
   <!-- ═══ ARROWS: simple straight lines between adjacent node edges ═══ -->
   <!-- Clean and predictable — no bezier guessing -->
 
-  <!-- The cycle path: one continuous circle with gaps at each node -->
-  <!-- Circle r=290 centered at (400,370). Nodes sit ON this circle. -->
-  <!-- Draw arc segments between nodes (visible parts of the circle) -->
+  <!-- Guide circle — the path all arrows follow -->
+  <circle cx="400" cy="370" r="290" fill="none" stroke="#30363d" stroke-width="1" stroke-dasharray="3,5"/>
 
-  <!-- Blue arc segments (the cycle flow, clockwise) -->
-  <!-- 1→2: from ~350° to ~35° (top to top-right) -->
-  <path d="M 490 90 A 290 290 0 0 1 596 148" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
-  <!-- 2→3: from ~35° to ~90° (top-right to right) -->
-  <path d="M 780 182 A 290 290 0 0 1 786 293" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
-  <!-- 3→4: from ~90° to ~145° (right to bottom-right) -->
-  <path d="M 786 348 A 290 290 0 0 1 780 453" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
-  <!-- 4→5: from ~145° to ~200° (bottom-right to bottom) -->
-  <path d="M 596 500 A 290 290 0 0 1 490 572" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
-  <!-- 5→6: from ~200° to ~245° (bottom to bottom-left) -->
-  <path d="M 310 586 A 290 290 0 0 1 210 516" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
-  <!-- 6→7: from ~245° to ~290° (bottom-left to left) -->
-  <path d="M 24 455 A 290 290 0 0 1 16 350" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- Arc segments ON the guide circle (r=290, cx=400, cy=370) -->
+  <!-- Node centers on circle: compute with cos/sin at 45° intervals -->
+  <!-- 0°=top(400,80) 45°=(605,165) 90°=(690,370) 135°=(605,575)
+       180°=(400,660) 225°=(195,575) 270°=(110,370) 315°=(195,165) -->
 
-  <!-- 7→1: IMPROVES (larger arc segment ~290° to ~350°, green dashed) -->
-  <path d="M 55 290 A 290 290 0 0 1 316 76" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="100" y="140" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+  <!-- Arrows trace the guide circle exactly. Points are on r=290 circle. -->
+  <!-- Offset ±15px from node center along circle tangent for start/end -->
+
+  <!-- 1→2: CAPTURE(400,80) → RETRIEVE(605,165) -->
+  <path d="M 475 85 A 290 290 0 0 1 590 145" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- 2→3: RETRIEVE(605,165) → ROUTE(690,370) -->
+  <path d="M 640 195 A 290 290 0 0 1 690 310" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- 3→4: ROUTE(690,370) → EXECUTE(605,575) -->
+  <path d="M 690 430 A 290 290 0 0 1 640 545" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- 4→5: EXECUTE(605,575) → JUDGE(400,660) -->
+  <path d="M 570 600 A 290 290 0 0 1 470 640" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- 5→6: JUDGE(400,660) → LEARN(195,575) -->
+  <path d="M 330 645 A 290 290 0 0 1 225 595" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+  <!-- 6→7: LEARN(195,575) → PERSIST(110,370) -->
+  <path d="M 160 545 A 290 290 0 0 1 115 430" fill="none" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#arr)"/>
+
+  <!-- 7→1: PERSIST(110,370) → CAPTURE(400,80) — IMPROVES (green, dashed, larger arc) -->
+  <path d="M 115 310 A 290 290 0 0 1 325 85" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="120" y="150" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
