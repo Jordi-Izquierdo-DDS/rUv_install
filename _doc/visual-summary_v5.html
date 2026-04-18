@@ -130,32 +130,32 @@
   <text x="125" y="231" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">q≥0.5 boost +0.05 | q&lt;0.5 penalize -0.05</text>
   <text x="125" y="245" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ corrects routing cross-session</text>
 
-  <!-- ═══ ARROWS following circular arc path ═══ -->
-  <!-- Invisible guide circle for arc reference: cx=400 cy=340 r=240 -->
+  <!-- ═══ ARROWS: SVG arc commands following a circle r=270 around cx=400 cy=345 ═══ -->
+  <!-- Using A (arc) command: A rx ry rotation large-arc-flag sweep-flag x y -->
 
-  <!-- 1→2: ROUTE → EXECUTE (arc top-right) -->
-  <path d="M530 100 C620 100 720 140 700 180" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="635" y="130" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
+  <!-- 1→2: ROUTE → EXECUTE -->
+  <path d="M 535 120 A 270 270 0 0 1 690 185" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="640" y="138" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
 
-  <!-- 2→3: EXECUTE → JUDGE (arc right) -->
-  <path d="M720 255 C740 310 740 360 720 400" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="745" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">add_step</text>
+  <!-- 2→3: EXECUTE → JUDGE -->
+  <path d="M 760 260 A 270 270 0 0 1 760 400" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="775" y="335" fill="#8b949e" font-size="8" font-family="sans-serif">add_step</text>
 
-  <!-- 3→4: JUDGE → LEARN (arc bottom-right) -->
-  <path d="M630 475 C580 510 520 530 550 535" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="600" y="515" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
+  <!-- 3→4: JUDGE → LEARN -->
+  <path d="M 680 480 A 270 270 0 0 1 555 535" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="640" y="520" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
 
-  <!-- 4→5: LEARN → PERSIST (arc bottom-left) -->
-  <path d="M250 575 C200 560 150 520 160 475" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="180" y="535" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
+  <!-- 4→5: LEARN → PERSIST -->
+  <path d="M 250 580 A 270 270 0 0 1 130 480" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="165" y="545" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
 
-  <!-- 5→6: PERSIST → RETRIEVE (arc left) -->
-  <path d="M80 400 C60 340 60 280 80 255" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="50" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">load</text>
+  <!-- 5→6: PERSIST → RETRIEVE -->
+  <path d="M 40 395 A 270 270 0 0 1 40 260" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="15" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">load</text>
 
-  <!-- 6→1: RETRIEVE → ROUTE (THE IMPROVEMENT ARC — closes the circle) -->
-  <path d="M200 180 C250 130 310 90 300 85" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="225" y="120" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+  <!-- 6→1: RETRIEVE → ROUTE (IMPROVEMENT ARC — closes the circle) -->
+  <path d="M 180 180 A 270 270 0 0 1 290 100" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="210" y="118" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
