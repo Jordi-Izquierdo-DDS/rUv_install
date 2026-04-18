@@ -130,42 +130,98 @@
   <text x="125" y="231" text-anchor="middle" fill="#c9d1d9" font-size="9" font-family="sans-serif">q≥0.5 boost +0.05 | q&lt;0.5 penalize -0.05</text>
   <text x="125" y="245" text-anchor="middle" fill="#3fb950" font-size="9" font-family="sans-serif">✅ corrects routing cross-session</text>
 
-  <!-- ═══ ARROWS (clockwise) ═══ -->
-  <!-- 1→2: ROUTE → EXECUTE -->
-  <path d="M530 95 Q600 120 600 180" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="575" y="140" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
+  <!-- ═══ ARROWS following circular arc path ═══ -->
+  <!-- Invisible guide circle for arc reference: cx=400 cy=340 r=240 -->
 
-  <!-- 2→3: EXECUTE → JUDGE -->
-  <path d="M675 255 L675 400" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="690" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">add_step</text>
+  <!-- 1→2: ROUTE → EXECUTE (arc top-right) -->
+  <path d="M530 100 C620 100 720 140 700 180" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="635" y="130" fill="#8b949e" font-size="8" font-family="sans-serif">setTrajRoute</text>
 
-  <!-- 3→4: JUDGE → LEARN -->
-  <path d="M570 460 Q500 510 500 530" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="540" y="500" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
+  <!-- 2→3: EXECUTE → JUDGE (arc right) -->
+  <path d="M720 255 C740 310 740 360 720 400" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="745" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">add_step</text>
 
-  <!-- 4→5: LEARN → PERSIST -->
-  <path d="M250 575 Q180 540 180 475" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="195" y="520" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
+  <!-- 3→4: JUDGE → LEARN (arc bottom-right) -->
+  <path d="M630 475 C580 510 520 530 550 535" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="600" y="515" fill="#8b949e" font-size="8" font-family="sans-serif">endTraj(q)</text>
 
-  <!-- 5→6: PERSIST → RETRIEVE -->
-  <path d="M125 400 L125 255" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-  <text x="100" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">load</text>
+  <!-- 4→5: LEARN → PERSIST (arc bottom-left) -->
+  <path d="M250 575 C200 560 150 520 160 475" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="180" y="535" fill="#8b949e" font-size="8" font-family="sans-serif">save</text>
 
-  <!-- 6→1: RETRIEVE → ROUTE (THE IMPROVEMENT ARROW) -->
-  <path d="M230 200 Q300 130 300 95" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="240" y="135" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES ↑</text>
+  <!-- 5→6: PERSIST → RETRIEVE (arc left) -->
+  <path d="M80 400 C60 340 60 280 80 255" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="50" y="330" fill="#8b949e" font-size="8" font-family="sans-serif">load</text>
 
-  <!-- ═══ DEGRADATION (bottom) ═══ -->
-  <rect x="100" y="660" width="600" height="120" rx="8" fill="#0d1117" stroke="#30363d"/>
-  <text x="400" y="682" text-anchor="middle" fill="#58a6ff" font-size="12" font-weight="bold" font-family="sans-serif">GRACEFUL DEGRADATION</text>
-  <text x="400" y="702" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">Full stack: SR + sona + rbank + VA → 8/10 (after learning)</text>
-  <text x="400" y="718" text-anchor="middle" fill="#3fb950" font-size="11" font-family="sans-serif">Without rbank: SR + sona → 7/10 | Without sona: SR alone → 8/10</text>
-  <text x="400" y="734" text-anchor="middle" fill="#d29922" font-size="11" font-family="sans-serif">Without SR: cosine → 7/10 | Without ONNX: hash → 3/10</text>
-  <text x="400" y="750" text-anchor="middle" fill="#f85149" font-size="11" font-family="sans-serif">Without daemon: pass-through (hooks only, no learning)</text>
-  <text x="400" y="770" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">System never crashes — always degrades to a simpler working mode</text>
+  <!-- 6→1: RETRIEVE → ROUTE (THE IMPROVEMENT ARC — closes the circle) -->
+  <path d="M200 180 C250 130 310 90 300 85" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="225" y="120" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+
+
 </svg>
 
-<h2>2. Learning Pipeline (detail)</h2>
+<h2>2. Graceful Degradation</h2>
+
+<p style="color:#8b949e">The system never crashes. Each component failure degrades to a simpler mode that still works.</p>
+
+<table>
+<tr><th>Level</th><th>What fails</th><th>What still works</th><th>Routing</th><th>Learning</th><th>Impact</th></tr>
+<tr>
+  <td><span class="good">Full stack</span></td>
+  <td>Nothing</td>
+  <td>SR + sona patterns + rbank quality + VerdictAnalyzer</td>
+  <td class="good">8/10</td>
+  <td class="good">3 loops + VA</td>
+  <td class="good">Best: routing improves over sessions</td>
+</tr>
+<tr>
+  <td><span class="good">-rbank</span></td>
+  <td>@ruvector/ruvllm-native missing</td>
+  <td>SR + sona patterns (no VerdictAnalyzer)</td>
+  <td class="good">7/10</td>
+  <td class="good">3 loops (no VA quality)</td>
+  <td>Routing still improves, no root cause analysis</td>
+</tr>
+<tr>
+  <td><span class="good">-sona</span></td>
+  <td>@ruvector/sona NAPI missing</td>
+  <td>SemanticRouter alone (no learned patterns)</td>
+  <td class="good">8/10</td>
+  <td class="bad">None</td>
+  <td>Good routing, no learning — static accuracy</td>
+</tr>
+<tr>
+  <td><span class="warn">-SR</span></td>
+  <td>@ruvector/router missing</td>
+  <td>Cosine against AGENT_PATTERNS (11 agents)</td>
+  <td class="warn">7/10</td>
+  <td class="good">3 loops if sona present</td>
+  <td>Decent routing, known overlap issues (auth/backend)</td>
+</tr>
+<tr>
+  <td><span class="bad">-ONNX</span></td>
+  <td>@xenova/transformers missing</td>
+  <td>Hash fallback (13% embedding density)</td>
+  <td class="bad">~3/10</td>
+  <td class="bad">Poisoned</td>
+  <td>Barely functional — logged, visible in [INTELLIGENCE]</td>
+</tr>
+<tr>
+  <td><span class="bad">-daemon</span></td>
+  <td>Daemon won't start / crashes</td>
+  <td>Hooks run, preBashSafety works, no IPC</td>
+  <td>N/A</td>
+  <td class="bad">None</td>
+  <td>Pass-through: Claude Code works normally, no intelligence</td>
+</tr>
+</table>
+
+<p style="color:#8b949e; font-size:0.9em; margin-top:8px;">
+<strong>Key principle:</strong> each layer's failure is caught by try/catch + logged. No exception propagates to crash the daemon or block Claude Code hooks.
+The handler has a 5s global timeout — if the daemon is unresponsive, hooks exit cleanly.
+</p>
+
+<h2>3. Learning Pipeline (detail)</h2>
 
 <pre>
 Claude Code Hook Event (stdin JSON)
@@ -215,7 +271,7 @@ Claude Code Hook Event (stdin JSON)
 <tr><td>PRETRAIN</td><td class="good">standalone script</td><td class="good">2378→42→19 (8 agents)</td><td class="good">upstream Q-learn + SR</td><td class="good">~1s+bridge</td><td class="good">diverse neutral seed</td><td>N/A</td><td class="good">works without</td></tr>
 </table>
 
-<h2>3. Services (8 total)</h2>
+<h2>5. Services (8 total)</h2>
 
 <table>
 <tr><th>Service</th><th>Package</th><th>What it provides</th><th>NAPI?</th></tr>
@@ -229,7 +285,7 @@ Claude Code Hook Event (stdin JSON)
 <tr><td>SemanticRouter</td><td>ruvector + @ruvector/router</td><td>Multi-utterance intent matching (8/10)</td><td>No (JS)</td></tr>
 </table>
 
-<h2>4. Vendor NAPI Binaries</h2>
+<h2>6. Vendor NAPI Binaries</h2>
 
 <table>
 <tr><th>Package</th><th>Binary</th><th>Size</th><th>What it adds</th><th>Rebuild script</th></tr>
@@ -237,7 +293,7 @@ Claude Code Hook Event (stdin JSON)
 <tr><td>@ruvector/ruvllm-native</td><td>ruvllm.linux-x64-gnu.node</td><td>5.2MB</td><td>VerdictAnalyzer (root cause + lessons), PatternStore with metadata</td><td>scripts/rebuild-ruvllm.sh</td></tr>
 </table>
 
-<h2>5. Graceful Degradation Chain</h2>
+<h2>X. Graceful Degradation Chain</h2>
 
 <pre>
 Full stack:       SR + sona patterns + rbank quality + VA    → 8/10 (after learning)
@@ -248,7 +304,7 @@ Without ONNX:     Hash fallback (13% density)                → ~3/10
 Without daemon:   Hooks run, no intelligence                 → pass-through
 </pre>
 
-<h2>6. Fixes Applied (v5 session)</h2>
+<h2>7. Fixes Applied (v5 session)</h2>
 
 <table>
 <tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
@@ -268,7 +324,7 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
 <tr><td>—</td><td>[INTELLIGENCE] shows modelRoute+quality</td><td>+1 JS</td><td>Useful output, not "0.50 General"</td></tr>
 </table>
 
-<h2>7. What's Next</h2>
+<h2>8. What's Next</h2>
 
 <table>
 <tr><th>Priority</th><th>Item</th><th>Status</th></tr>
@@ -281,7 +337,7 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
 <tr><td>Deferred</td><td>Upstream HNSW/VectorDB dimension fix</td><td class="info">Documented in Fix 16</td></tr>
 </table>
 
-<h2>8. File Map</h2>
+<h2>9. File Map</h2>
 
 <pre>
 rufloV3_bootstrap_v5/
