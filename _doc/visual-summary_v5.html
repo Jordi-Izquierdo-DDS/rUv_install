@@ -137,29 +137,22 @@
   <text x="100" y="193" text-anchor="middle" fill="#8b949e" font-size="10" font-family="sans-serif">REFINE (mincut/GNN)</text>
   <text x="100" y="206" text-anchor="middle" fill="#8b949e" font-size="8" font-family="sans-serif">deferred · ADR-004</text>
 
-  <!-- ═══ ARROWS: outer curves, each bulging AWAY from center ═══ -->
+  <!-- ═══ ARROWS: simple straight lines between adjacent node edges ═══ -->
+  <!-- Clean and predictable — no bezier guessing -->
 
-  <!-- 1→2: CAPTURE right-edge → RETRIEVE top-edge (curves outward top-right) -->
-  <path d="M 490 79 C 590 50 650 80 680 130" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Visible guide circle (faint) -->
+  <circle cx="400" cy="370" r="290" fill="none" stroke="#30363d" stroke-width="1" stroke-dasharray="2,4"/>
 
-  <!-- 2→3: RETRIEVE right-edge → ROUTE right-edge (curves outward right) -->
-  <path d="M 780 159 C 810 220 810 260 790 290" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 1→2 --><line x1="490" y1="90" x2="590" y2="145" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 2→3 --><line x1="780" y1="175" x2="790" y2="290" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 3→4 --><line x1="790" y1="348" x2="780" y2="455" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 4→5 --><line x1="590" y1="495" x2="490" y2="575" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 5→6 --><line x1="310" y1="590" x2="210" y2="510" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- 6→7 --><line x1="20" y1="455" x2="10" y2="348" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
 
-  <!-- 3→4: ROUTE right-edge → EXECUTE right-edge (curves outward right) -->
-  <path d="M 790 348 C 810 390 810 430 780 450" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-
-  <!-- 4→5: EXECUTE bottom-edge → JUDGE right-edge (curves outward bottom-right) -->
-  <path d="M 685 508 C 660 560 550 600 490 589" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-
-  <!-- 5→6: JUDGE left-edge → LEARN bottom-edge (curves outward bottom-left) -->
-  <path d="M 310 589 C 240 620 150 600 115 522" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-
-  <!-- 6→7: LEARN left-edge → PERSIST left-edge (curves outward left) -->
-  <path d="M 20 486 C -10 440 -10 380 10 348" fill="none" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr)"/>
-
-  <!-- 7→1: PERSIST top-edge → CAPTURE left-edge (IMPROVEMENT — the big arc over top-left) -->
-  <path d="M 100 290 C 60 180 160 60 310 66" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
-  <text x="90" y="140" fill="#3fb950" font-size="11" font-weight="bold" font-family="sans-serif">IMPROVES</text>
+  <!-- 7→1: IMPROVEMENT ARC (the only curved one — big sweep) -->
+  <path d="M 50 290 A 310 310 0 0 1 320 60" fill="none" stroke="#3fb950" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#arrg)"/>
+  <text x="100" y="120" fill="#3fb950" font-size="12" font-weight="bold" font-family="sans-serif">IMPROVES</text>
 
 
 </svg>
