@@ -12,6 +12,8 @@
 - [Fix 16 — HNSW vector search](fixes/16_hnsw-vector-search-fix.md) — built, tested, removed (superseded by Fix 17)
 - [Fix 17 — Self-learning loop closure](fixes/17_self-learning-loop-closure.md) — model_route NAPI + quality-aware boost
 - [Fix 18 — ruvllm NAPI: VerdictAnalyzer](fixes/18_ruvllm-napi-verdictanalyzer.md) — new vendor binary, root cause analysis
+- [Fix 19 — Gradient quality](fixes/19_gradient-quality-fix.md) — VerdictAnalyzer binary→gradient, tensorCompress export
+- [Fix 20 — Wiring root causes](fixes/20_wiring-root-causes.md) — ONNX prototype patch, classifyChange args+filePaths, TC data feed
 
 ### v4 lean daemon session (2026-04-16/17, RFV3_v0_test_init)
 - [Fix 01 — Bridge pretrain→intelligence](fixes/01_bridge-pretrain-to-intelligence.md) — connected Q-learning to PageRank

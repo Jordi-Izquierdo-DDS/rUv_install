@@ -235,7 +235,9 @@ async function dispatch(event, input) {
       sess.stepCount = (sess.stepCount || 0) + 1;
       if (!success) sess.failCount = (sess.failCount || 0) + 1;
       writeSession(sess);
-      await sendCommand({ command: 'add_step', text: `post:${toolName}:${success ? 'ok' : 'fail'}`, reward: success ? 0.1 : -0.1 }, 1500);
+      // Fix 20b: forward file_path for classifyChange (diff context for C4 category).
+      const filePath = input.tool_input?.file_path || '';
+      await sendCommand({ command: 'add_step', text: `post:${toolName}:${success ? 'ok' : 'fail'}`, filePath, reward: success ? 0.1 : -0.1 }, 1500);
       return;
 
     // ─── Stop / SubagentStop: Phases 4-7 JUDGE+DISTILL+STORE+REINFORCE, Loop B

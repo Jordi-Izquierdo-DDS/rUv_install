@@ -96,6 +96,24 @@ async function patchOnnxEmbedder() {
     }
     return out;
   };
+  // Fix 20a: OnnxEmbedder class captures init/embed via closure — patching exports
+  // alone doesn't reach class methods. Patch the prototype so ALL consumers
+  // (IntelligenceEngine, AdaptiveEmbedder, any future user) get real ONNX.
+  if (exp.OnnxEmbedder) {
+    exp.OnnxEmbedder.prototype.init = async function() { return true; };
+    exp.OnnxEmbedder.prototype.embed = async function(text) {
+      const r = await xenova(String(text || '').slice(0, 512), { pooling: 'mean', normalize: true });
+      return Array.from(r.data);
+    };
+    exp.OnnxEmbedder.prototype.embedBatch = async function(texts) {
+      const out = [];
+      for (const t of texts) {
+        const r = await xenova(String(t || '').slice(0, 512), { pooling: 'mean', normalize: true });
+        out.push(Array.from(r.data));
+      }
+      return out;
+    };
+  }
   log('ruvector onnx-embedder patched → xenova');
 }
 
@@ -291,9 +309,20 @@ const services = [
     async onSessionEnd() {
       if (!tensorCompress) return {};
       try {
+        // Fix 20c: feed sona pattern embeddings to TC (upstream pattern: cli.js:5004).
+        // TC compresses cold/infrequently-accessed embeddings for storage efficiency.
+        try {
+          const sf = path.join(PROJECT_DIR, '.claude-flow', 'sona', 'state.json');
+          if (fs.existsSync(sf)) {
+            const st = JSON.parse(fs.readFileSync(sf, 'utf8'));
+            for (const p of (st.patterns || [])) {
+              if (p.centroid && Array.isArray(p.centroid)) tensorCompress.store(`sona-${p.id}`, p.centroid);
+            }
+          }
+        } catch (e) { log('tensorCompress.feed: ' + e.message); }
         const stats = tensorCompress.recompressAll();
         const tcPath = path.join(PROJECT_DIR, '.claude-flow', 'data', 'tensor-compress.json');
-        fs.writeFileSync(tcPath, tensorCompress.export());
+        fs.writeFileSync(tcPath, JSON.stringify(tensorCompress.export()));
         log(`tensorCompress: ${stats.totalTensors} tensors, ${stats.savingsPercent?.toFixed(1)}% savings`);
         return { tensorCompress: stats };
       } catch (e) { log('tensorCompress: ' + e.message); return {}; }
@@ -485,7 +514,7 @@ const H = {
     const vec = await embed(c.text || '');
     activeTrajId = sona.beginTrajectory(vec);
     // Capture seed for Phase 6 STORE at end_trajectory. embedding reused (no re-embed).
-    activeTrajSeed = { prompt: c.text || '', embedding: vec, startedAt: Date.now(), steps: 0, stepActions: [], routedAgent: null };
+    activeTrajSeed = { prompt: c.text || '', embedding: vec, startedAt: Date.now(), steps: 0, stepActions: [], filePaths: [], routedAgent: null };
     return { ok: true, data: { trajectoryId: activeTrajId } };
   },
   // Phase 1 CAPTURE (pre/post tool step) · Loop A · reactive
@@ -507,6 +536,8 @@ const H = {
         error: success ? '' : (c.text || 'failed'),
         rationale: '',
       });
+      // Fix 20b: accumulate file paths for classifyChange diff context.
+      if (c.filePath) activeTrajSeed.filePaths.push(c.filePath);
     }
     return { ok: true };
   },
@@ -533,8 +564,12 @@ const H = {
         );
       } catch (e) { log('verdict: ' + e.message); }
     }
-    // Use VerdictAnalyzer quality if available, otherwise fall back to handler reward.
-    const quality = verdict ? verdict.qualityScore : reward;
+    // VerdictAnalyzer.qualityScore is binary (0 or 1, threshold at reward=0.5).
+    // Using it here destroyed the handler's gradient quality signal — all patterns
+    // ended up avgQuality=1 (quality=0 ones were dropped by sona's 0.05 threshold).
+    // Fix: use the handler's gradient quality (1 - fails/steps) for sona learning;
+    // VerdictAnalyzer metadata (rootCause, lessons, improvements) still feeds rbank.
+    const quality = reward;
 
     sona.endTrajectory(id, quality);
     // Loop A fires automatically inside Rust (MicroLoRA).
@@ -553,10 +588,14 @@ const H = {
     // Tier 2: classify trajectory using upstream ruvector.classifyChange (real classifier returning
     //   feature/bugfix/refactor/docs/test/config/unknown). Output → MemoryEntry tags as
     //   DQ-03 partial workaround. Pre-existing C4 tags contract; zero invention.
+    // Fix 20b: classifyChange(diff, message) — diff = file paths for extension matching,
+    // message = user prompt for keyword matching. Was (prompt, '') — args swapped, no diff data.
     let category = 'unknown';
     if (rvHelpers?.classifyChange && seed?.prompt) {
-      try { category = rvHelpers.classifyChange(seed.prompt, '') || 'unknown'; }
-      catch (e) { log('classifyChange: ' + e.message); }
+      try {
+        const diff = (seed?.filePaths || []).join('\n');
+        category = rvHelpers.classifyChange(diff, seed.prompt) || 'unknown';
+      } catch (e) { log('classifyChange: ' + e.message); }
     }
 
     // Phase 6 STORE · Loop B · — (no tier)
