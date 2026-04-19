@@ -8,7 +8,13 @@
 - [SPRINT_0_ROOT_CAUSES.md](SPRINT_0_ROOT_CAUSES.md) — protocol 2 + 10xWhy: why 3 mechanisms didn't run
 - [visual-summary_v5.html](../_doc/visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
 
-## All 18 Fixes
+## Fixes — READ THIS FIRST
+
+- **[fixes_merged/README.md](fixes_merged/README.md)** — final clean list grouped into upstream (4 patches) + implementation (10 concerns). **Start here.**
+- [fixes_merged/UPSTREAM.md](fixes_merged/UPSTREAM.md) — ruvector/ruvllm Rust changes we maintain in our vendor NAPI
+- [fixes_merged/IMPLEMENTATION.md](fixes_merged/IMPLEMENTATION.md) — ruflo daemon + handler + bootstrap
+
+## All 25 Fixes (iterative log — archaeology)
 
 ### v5 session (2026-04-17/18)
 - [Fix 16 — HNSW vector search](fixes/16_hnsw-vector-search-fix.md) — built, tested, removed (superseded by Fix 17)

@@ -317,46 +317,40 @@ Without ONNX:     Hash fallback (13% density)                → ~3/10
 Without daemon:   Hooks run, no intelligence                 → pass-through
 </pre>
 
-<h2>7. Fixes Applied (v5 sessions)</h2>
+<h2>7. Fixes — Final Clean List (merged, not iterative)</h2>
 
-<h3>Original session (Fix 16–18)</h3>
+<p style="color:#8b949e">See <code>doc/fixes_merged/</code> for full detail. This is the current state of the system, not the journey. Iterative log (Fix 01–25) archived in <code>doc/fixes/</code>.</p>
+
+<h3>7a. Upstream fixes — ruvector/ruvllm Rust (maintained in our vendor)</h3>
+<p>Rebuild via <code>scripts/rebuild-sona.sh</code> + <code>scripts/rebuild-ruvllm.sh</code>. All call existing public Rust APIs or fix internal bugs — upstream PR candidates.</p>
 <table>
-<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td>16</td><td>HNSW route index → <span class="bad">removed</span></td><td>-52</td><td>Superseded by Fix 17</td></tr>
-<tr><td>17</td><td>model_route in sona NAPI</td><td>+17 Rust</td><td>Patterns carry routed agent</td></tr>
-<tr><td>17b</td><td>Quality-aware boost/penalize</td><td>+3 JS</td><td>q≥0.5 boost, q&lt;0.5 penalize</td></tr>
-<tr><td>18</td><td>ruvllm NAPI: VerdictAnalyzer + PatternStore</td><td>+180 Rust</td><td>Root cause analysis</td></tr>
+<tr><th>#</th><th>Patch</th><th>Type</th><th>LOC</th><th>Impact</th></tr>
+<tr><td class="good">U1</td><td>sona NAPI surface expansion (saveState/loadState, consolidateTasks, prunePatterns, ewcStats, model_route field)</td><td>surface add</td><td>~60 Rust</td><td>Phase 0/11/12 + Fix 23 observability + Fix 17 retrieval boost</td></tr>
+<tr><td class="good">U2</td><td>sona EWC param_count alignment (coordinator.rs)</td><td>bug fix</td><td>1 Rust</td><td>update_fisher now fires (was 384 vs 6144 silent no-op); samples_seen increments</td></tr>
+<tr><td class="good">U3</td><td>ruvllm NAPI binding (new napi_simple.rs file) + ReasoningBank.record_usage delegate</td><td>surface add</td><td>~180 Rust</td><td>VerdictAnalyzer + PatternStore + record_usage (Fix 18+22)</td></tr>
+<tr><td class="good">U4</td><td>JsTrajectoryStep null-String workaround</td><td>type fix</td><td>2 Rust</td><td>Success+failure trajectories both stable (NAPI-RS 2.16 limit)</td></tr>
 </table>
 
-<h3>Fix 19 — Gradient quality</h3>
+<h3>7b. Implementation / Wiring — ruflo adapter layer</h3>
+<p>Composition of @ruvector/*, @claude-flow/memory, @xenova/transformers. Zero invented learning logic.</p>
 <table>
-<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td class="good">19a</td><td>VerdictAnalyzer metadata-only (not quality override)</td><td>~0 net</td><td>Quality gradient (0-1) flows through to sona — was binary {0,1}</td></tr>
-<tr><td class="good">19b</td><td>tensorCompress.export() JSON.stringify wrapper</td><td>+1 JS</td><td>No more crash on session_end</td></tr>
+<tr><th>#</th><th>Concern</th><th>File</th><th>Role</th></tr>
+<tr><td class="good">I1</td><td>Daemon singleton + 8-service lifecycle</td><td>ruvector-daemon.mjs</td><td>Process management; ADR-007 discipline</td></tr>
+<tr><td class="good">I2</td><td>ONNX embedder dual-layer patch (exports + prototype)</td><td>ruvector-daemon.mjs patchOnnxEmbedder</td><td>Real 384d embeddings (was 13% hash); IE + AdaptiveEmbedder both real ONNX</td></tr>
+<tr><td class="good">I3</td><td>Multi-source routing (SemanticRouter → cosine → sona boost → rbank)</td><td>ruvector-daemon.mjs route()</td><td>Agent selection with quality-aware priors</td></tr>
+<tr><td class="good">I4</td><td>Trajectory lifecycle (begin/add_step/end)</td><td>ruvector-daemon.mjs handlers</td><td>Capture + context seeding</td></tr>
+<tr><td class="good">I5</td><td>end_trajectory chain (verdict metadata → gradient quality → sona → rbank.recordUsage → C4 store)</td><td>ruvector-daemon.mjs end_trajectory</td><td>Judge → learn → persist; gradient quality preserved (not binary)</td></tr>
+<tr><td class="good">I6</td><td>session_end Loop B+C (forceLearn + flush + consolidate + prune + saveState + metrics + TC + rbank)</td><td>services[].onSessionEnd</td><td>Canonical upstream Loop C; no tick() churn</td></tr>
+<tr><td class="good">I7</td><td>Observability (findPatterns log + EWC stats in status)</td><td>ruvector-daemon.mjs</td><td>Retrieval + EWC progress visible (viz-consumable)</td></tr>
+<tr><td class="good">I8</td><td>Handler thin adapter (stdin parse, safety, IPC forward, gradient q compute)</td><td>hook-handler.cjs</td><td>Claude Code hook → daemon IPC; zero learning logic</td></tr>
+<tr><td class="good">I9</td><td>Pretrain bridge (standalone)</td><td>scripts/pretrain.sh</td><td>Upstream Q-learning → sona IPC bridge; cold-start diverse seed</td></tr>
+<tr><td class="good">I10</td><td>Bootstrap installer (idempotent, vendor overlay, verify gates)</td><td>scripts/bootstrap.sh</td><td>One-command install per target project</td></tr>
 </table>
 
-<h3>Fix 20 — Wiring root causes</h3>
-<table>
-<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td class="good">20a</td><td>OnnxEmbedder prototype patch</td><td>+15 JS</td><td>IE now gets real 384d ONNX (was 12/384 hash)</td></tr>
-<tr><td class="good">20b</td><td>classifyChange args + handler forwards file_path</td><td>+5 JS</td><td>Real categories (feature/bugfix/docs/test) — was all "unknown"</td></tr>
-<tr><td class="good">20c</td><td>TensorCompress fed sona centroids at session_end</td><td>+10 JS</td><td>22 tensors registered (compression pending access signal)</td></tr>
-</table>
-
-<h3>Sprint 0 — Observability + feedback closure</h3>
-<table>
-<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td class="good">21</td><td>findPatterns telemetry in daemon log</td><td>+4 JS</td><td>Retrieval quality visible: q, hits, top-1 route</td></tr>
-<tr><td class="good">22</td><td>ReasoningBank.record_usage + NAPI + daemon wiring</td><td>+15 Rust, +9 JS</td><td>Rbank feedback loop CLOSED — 12/12 patterns at usage=1 first session</td></tr>
-<tr><td class="good">23</td><td>sona.ewcStats() NAPI accessor</td><td>+8 Rust, +3 JS</td><td>50-sample gate now observable (was invisible)</td></tr>
-</table>
-
-<h3>Fix 24+25 — Trajectory-drop + EWC unblock (root causes found via Protocol 2)</h3>
-<table>
-<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td class="good">24</td><td>EWC param_count alignment (coordinator.rs)</td><td>+1 Rust</td><td><strong>update_fisher now fires</strong> — was silent no-op due to 384 vs 6144 dim mismatch</td></tr>
-<tr><td class="good">25</td><td>Remove per-trajectory tick() + setInterval(30s)</td><td>-2 JS</td><td><strong>Trajectories survive to forceLearn</strong> — tick() was draining buffer into run_cycle(force=false) which dropped &lt;10 trajectories</td></tr>
-</table>
+<div class="tldr">
+  <strong>Totals:</strong> 4 upstream patches (~240 LOC Rust) + 10 implementation concerns (1098 LOC JS).
+  All upstream are surface adds or real bug fixes (PR candidates). All implementation is composition — no invented formulas, no magic numbers, no custom learning logic. Details: <code>doc/fixes_merged/UPSTREAM.md</code> + <code>doc/fixes_merged/IMPLEMENTATION.md</code>.
+</div>
 
 <h2>8. What's Next</h2>
 
