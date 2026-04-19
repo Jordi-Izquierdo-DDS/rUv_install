@@ -65,6 +65,24 @@ index dcb7c8e2..83ba9488 100644
  }
  
  #[cfg(test)]
+diff --git a/crates/sona/src/loops/coordinator.rs b/crates/sona/src/loops/coordinator.rs
+index 927a162e..511bef6a 100644
+--- a/crates/sona/src/loops/coordinator.rs
++++ b/crates/sona/src/loops/coordinator.rs
+@@ -44,8 +44,12 @@ impl LoopCoordinator {
+             ..Default::default()
+         })));
+ 
++        // Fix 24: EWC param_count must match compute_pattern_gradients output size.
++        // That fn (background.rs:185) sizes gradients by patterns[0].centroid.len() == embedding_dim.
++        // Previously: hidden_dim * base_lora_rank * 2 (e.g. 6144 for 384-dim embed) caused
++        // update_fisher to silently return early — samples_seen never incremented.
+         let ewc = Arc::new(RwLock::new(EwcPlusPlus::new(EwcConfig {
+-            param_count: config.hidden_dim * config.base_lora_rank * 2,
++            param_count: config.embedding_dim,
+             initial_lambda: config.ewc_lambda,
+             ..Default::default()
+         })));
 diff --git a/crates/sona/src/napi.rs b/crates/sona/src/napi.rs
 index 7ecd5293..e712ebbd 100644
 --- a/crates/sona/src/napi.rs

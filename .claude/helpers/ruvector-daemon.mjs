@@ -578,10 +578,12 @@ const H = {
     const quality = reward;
 
     sona.endTrajectory(id, quality);
-    // Loop A fires automatically inside Rust (MicroLoRA).
-    // tick() checks Loop B gate (enough trajectories? enough time?). Cheap, <1ms.
-    let learnStatus = null;
-    try { learnStatus = sona.tick(); } catch {}
+    // Loop A (MicroLoRA) fires automatically inside instant.on_trajectory — no daemon call needed.
+    // Loop B deferred to session_end forceLearn (canonical per foxref §1.2; hourly cadence at
+    // session scale = once per session). Fix 25: removed per-trajectory tick() — after 1hr
+    // daemon uptime it drained the buffer into run_cycle(force=false) which dropped trajectories
+    // when count < min_trajectories (=10). forceLearn with force=true at session_end has no such gate.
+    const learnStatus = null;
 
     // Fix 22: record usage feedback on rbank patterns retrieved during route().
     // Closes the explicit feedback loop per upstream PatternStore::record_usage design.
@@ -766,9 +768,9 @@ async function main() {
   await initialize();
   await warmPatterns();
 
-  // tick()-driven background learning (replaces forceLearn per-trajectory).
-  // SonaEngine.tick() checks internally if enough trajectories accumulated for Loop B.
-  setInterval(() => { try { sona.tick(); } catch {} }, 30_000);
+  // Fix 25: no setInterval tick() — after 1hr uptime every tick drained the instant buffer
+  // into run_cycle(force=false) which dropped trajectories when count < min_trajectories.
+  // forceLearn at session_end is the canonical Loop B trigger (force=true, no min gate).
 
   const server = net.createServer(handleConnection);
   server.listen(SOCKET_PATH, () => {

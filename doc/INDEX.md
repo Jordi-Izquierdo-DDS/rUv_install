@@ -19,6 +19,8 @@
 - [Fix 21 — findPatterns telemetry](fixes/21_findpatterns-telemetry.md) — daemon log per retrieval (hits, top-1 route + quality)
 - [Fix 22 — rbank record_usage](fixes/22_rbank-record-usage.md) — explicit feedback loop closed (upstream PatternStore::record_usage exposed via NAPI + daemon wiring)
 - [Fix 23 — EWC stats visibility](fixes/23_ewc-stats-visibility.md) — ewc_stats() NAPI: samples_seen + task_count + remaining_to_detection
+- [Fix 24 — EWC param_count alignment](fixes/24_ewc-param-count-alignment.md) — upstream dim mismatch (6144 vs 384) made update_fisher silent no-op; now uses config.embedding_dim
+- [Fix 25 — Remove tick(), trust forceLearn](fixes/25_remove-tick-trust-forcelearn.md) — trajectory-drop fix: tick() after 1hr uptime drained buffer into run_cycle(force=false) which discarded small batches
 
 ### v4 lean daemon session (2026-04-16/17, RFV3_v0_test_init)
 - [Fix 01 — Bridge pretrain→intelligence](fixes/01_bridge-pretrain-to-intelligence.md) — connected Q-learning to PageRank
