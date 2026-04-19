@@ -121,6 +121,54 @@ Callers (our daemon) pass `error: ''` for successful steps. Workaround for the N
 
 ---
 
+## U5. sona `find_similar` — wire orphan `touch()` helper
+
+**Crate:** `crates/sona/src/reasoning_bank.rs:362` + `crates/sona/src/engine.rs:125`
+**Why:** `LearnedPattern::touch()` already exists at `types.rs:313` and does exactly what retrieval needs — bump `access_count`, update `last_accessed`. But it's defined and **never called anywhere in the codebase**. `find_similar` returned patterns without recording they'd been accessed, so `access_count` stayed at 0 forever. Without this signal, we couldn't tell which seeds were useful vs. noise (hint line in the system-reminder literally always showed `access=0`).
+
+**Change:**
+```rust
+// reasoning_bank.rs:362 — BEFORE
+pub fn find_similar(&self, query: &[f32], k: usize) -> Vec<&LearnedPattern> {
+    let mut scored: Vec<_> = self.patterns.values()
+        .map(|p| (p, p.similarity(query)))
+        .collect();
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    scored.into_iter().take(k).map(|(p, _)| p).collect()
+}
+
+// AFTER — &mut self + wire existing touch()
+pub fn find_similar(&mut self, query: &[f32], k: usize) -> Vec<&LearnedPattern> {
+    let mut scored: Vec<(u64, f32)> = self.patterns.iter()
+        .map(|(&id, p)| (id, p.similarity(query)))
+        .collect();
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    let top_ids: Vec<u64> = scored.into_iter().take(k).map(|(id, _)| id).collect();
+    for id in &top_ids {
+        if let Some(p) = self.patterns.get_mut(id) { p.touch(); }
+    }
+    top_ids.iter().filter_map(|id| self.patterns.get(id)).collect()
+}
+```
+
+And `engine.rs:125` — switch the lock guard to match the new mutability:
+```rust
+// BEFORE:  .reasoning_bank().read().find_similar(query_embedding, k)
+// AFTER:   .reasoning_bank().write().find_similar(query_embedding, k)
+```
+
+`napi_simple.rs` signature unchanged — `RwLock` interior mutability handles the rest.
+
+**Why this matters (beyond observability):** `should_prune` at `types.rs:325` keys off `access_count`. With the orphan `touch()`, useful-but-seldom-retrieved patterns would get pruned even though they'd been retrieved hundreds of times; junk patterns survived because "never retrieved" looked the same as "retrieved often". Wiring `touch()` makes prune decisions correct.
+
+**Verification:** live daemon test — Q1/Q2/Q3 against same sona state, access counters 1→2→3 across queries, persisted to `state.json` via upstream `coordinator.serialize_state` (no daemon-side shadow).
+
+**Upstream PR candidate:** YES. This is a clear upstream oversight — helper exists, just not wired.
+**Lineage:** Fix 26.
+**Effort:** ~8 LOC Rust net (8 added, 4 removed).
+
+---
+
 ## Cargo.toml + lib.rs additions (ruvllm)
 
 To make the NAPI compile, the ruvllm crate needs:
@@ -155,5 +203,6 @@ Captured in `vendor/@ruvector/ruvllm-native/src/ruvllm-napi.patch`.
 | U2 | EWC param_count fix | Bug fix | 1 | YES — clear upstream bug |
 | U3 | ruvllm NAPI (new file) | Surface addition | ~175 | YES — enables Node integration |
 | U4 | NAPI-RS null String workaround | Type workaround | 2 | MAYBE — upstream NAPI-RS issue |
+| U5 | `find_similar` wires orphan `touch()` | Bug fix | ~8 | YES — helper exists unused |
 
-**Total:** ~240 LOC Rust across 2 crates. All call existing public APIs or fix existing internal bugs. Zero invention.
+**Total:** ~248 LOC Rust across 2 crates. All call existing public APIs or fix existing internal bugs. Zero invention.
