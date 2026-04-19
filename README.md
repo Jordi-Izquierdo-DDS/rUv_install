@@ -72,13 +72,68 @@ claude                              # starts Claude Code session
 # subsequent hooks: <50ms warm
 ```
 
-### Verify installation
+---
+
+## The two operator scripts
+
+### `scripts/pretrain.sh` — cold-start warm-up
+
+Runs once as the last step of `bootstrap.sh`, and can be re-run manually whenever you want to re-seed from a fresh git history.
 
 ```bash
-bash scripts/verify.sh              # 46 acceptance gates
+bash scripts/pretrain.sh --target /path/to/your/project --depth 50 --verbose
 ```
 
-Gates cover: LOC cap, no-reinvention, NAPI surface (sona + ruvllm), settings.json schema, daemon lifecycle discipline, Fix 19/21/22/23/24/25 verification, required file presence.
+| Flag | Default | Effect |
+|---|---|---|
+| `--target <path>` | `$PWD` | Which project to pretrain |
+| `--depth N` | 100 | Git history depth (passes to upstream `hookPretrainTool`) |
+| `--skip-git` | off | File structure only, no git log analysis |
+| `--skip-files` | off | Git only, no file walk |
+| `--verbose` | off | Print per-phase upstream progress |
+
+Env override (used by `bootstrap.sh`): `PRETRAIN_DEPTH=50 bash scripts/bootstrap.sh --target ...`
+
+Two-phase execution, zero invention:
+
+**Phase A — upstream `hookPretrainTool`** (from `agentic-flow`): walks `git ls-files`, builds a Q-table of `edit:<ext> → agent` weights, collects file co-edit patterns from `git log`, reads important files (`README.md`, `CLAUDE.md`, `package.json`, `Cargo.toml`, `tsconfig.json`, etc.) as domain memories. Writes `.agentic-flow/intelligence.json`.
+
+**Phase B — bridge to sona** (ruflo):
+1. **Q-patterns × real file samples** — for each `edit:.ext`, sample up to 2 real files of that extension from the project, use their first 400 chars as trajectory text, route to upstream's Q-table winner, quality = Q / maxQ.
+2. **Memories** — each `intel.memories[]` entry (README/CLAUDE.md excerpt) seeded as a trajectory; route inferred via upstream `getAgentForFile`.
+3. **Dir-patterns** — each `intel.dirPatterns[dir] → agent` seeded with one real sample file from that directory.
+
+Why real content matters: synthetic text like `edit:.tsx` embeds into a different region of vector space than a live prompt ("fix the login form"). Seeding with actual file bytes puts pretrain embeddings in the **same space future prompts will land in**, so `findPatterns` actually hits them.
+
+**On GitNexus (2404 files, depth 50):** 4s total → 100 trajectories buffered → **52 crystallized patterns** → 9 distinct agent routes. sona state ~430 KB.
+
+### `scripts/verify.sh` — 46-gate acceptance test
+
+```bash
+bash scripts/verify.sh
+```
+
+15 gate sections, ~20s runtime. Run after every bootstrap, every daemon/helper edit, every vendor regen. Zero `|| true` anywhere — any fail breaks exit code.
+
+| Section | Gate count | What it proves |
+|---|---|---|
+| 1 | Environment | node ≥18, `.claude/`, `scripts/`, `vendor/` present |
+| 2 | LOC cap | `.claude/helpers/*` combined ≤ 1200 (ADR-007 composition rule) |
+| 3 | No reinvention | no `class PatternStore`, `class SonaEngine`, `k-means` locally |
+| 4 | Upstream imports | `@ruvector/sona`, `@ruvector/ruvllm-native`, `@xenova/transformers`, `@claude-flow/memory` all resolvable |
+| 5 | MCP config | `.mcp.json` present and parseable |
+| 6 | `@ruvector/sona` NAPI surface | Phase-0 (save/loadState), OQ-3 (consolidateTasks, prunePatterns, ewcStats), model_route field, vendor overlay in place |
+| 7 | `@ruvector/ruvllm-native` NAPI surface | VerdictAnalyzer + ReasoningBank + `record_usage` |
+| 8 | Core runtime loads | `@ruvector/core`, attention, TensorCompress, SemanticRouter all importable |
+| 9 | Required files | hook-handler, daemon, CLAUDE.md, README, ADRs, fixes docs, foxref guide, memory index |
+| 10 | C4 memory (ADR-003) | `@claude-flow/memory` dep + explicit `better-sqlite3` provider + single-writer discipline |
+| 11 | Observability (ADR-001) | no `typeof x === 'function'` defensive checks; centralized log; findPatterns telemetry present |
+| 12 | Daemon lifecycle (ADR-006) | services array; `onSessionEnd` wired; no DB shutdown in `session_end` |
+| 13 | Fix 25 | no per-trajectory `tick()`; no `setInterval(tick, ...)` |
+| 14 | Fix 19a | `quality` is reward-based, not verdict-string-based |
+| 15 | Settings schema | `.claude/settings.json` matches Claude Code hook schema |
+
+A green verify means the installed target satisfies every ADR invariant, every upstream patch is applied, and every fix we've shipped is still in place.
 
 ### Regenerate vendor NAPI binaries (maintainers only)
 
