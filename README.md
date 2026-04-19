@@ -59,9 +59,16 @@ What bootstrap does:
 | 4 | Clear stale runtime state |
 | 5 | Register pi-brain MCP (if `.env.pi-key` present) |
 | 6 | Seed Claude-Code project memory from `memory/*.md` (if first install) |
-| 7 | Cold-start pretrain — upstream Q-learning over file structure + git history, bridged into sona |
+| 7 | Cold-start pretrain — upstream Q-learning over file structure + git history, bridged into sona (only runs if no prior sona state) |
 
 Idempotent — re-run to update. Target never needs Rust toolchain.
+
+> **If you're installing into a real project with git history, pretrain is what turns "generic assistant" into "assistant primed on YOUR code".** Bootstrap runs it once automatically. If you installed into an empty project and later added code, or want a different git-history depth, re-run manually:
+> ```bash
+> rm -f /path/to/your/project/.claude-flow/sona/state.json
+> bash scripts/pretrain.sh --target /path/to/your/project --depth 50
+> ```
+> See [`scripts/pretrain.sh`](#scriptspretrainsh--cold-start-warm-up) below for details.
 
 ### Start using it
 
