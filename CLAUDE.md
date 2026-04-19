@@ -62,8 +62,6 @@ rufloV3_bootstrap_v5/
 │   ├── audit/                   — e2e audit results
 │   ├── reference/               — foxref + ruvector-crate-mapping
 │   ├── support_tools/           — gitnexus + pi-brain + ruvector-catalog guides
-│   ├── LEARNING_SYSTEM_100.md   — post Sprint 0 roadmap
-│   ├── SPRINT_0_ROOT_CAUSES.md  — protocol 2 + 10xwhy
 │   └── TODO-v5.md               — honest next steps
 ├── zz_archive/                  — iterative backups + v3/v4 legacy
 └── package.json                 — deps: @ruvector/*, @claude-flow/*, @xenova/*

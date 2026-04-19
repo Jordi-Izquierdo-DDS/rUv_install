@@ -2,11 +2,11 @@
 
 ## v5 key docs (start here)
 
-- [README.md](../README.md) — v5 overview, architecture, audit results
+- [README.md](../README.md) — v5 overview, architecture
 - [TODO-v5.md](TODO-v5.md) — honest next steps with priorities
-- [LEARNING_SYSTEM_100.md](LEARNING_SYSTEM_100.md) — path from 6/10 → 10/10 (4 blockers + sprint plan)
-- [SPRINT_0_ROOT_CAUSES.md](SPRINT_0_ROOT_CAUSES.md) — protocol 2 + 10xWhy: why 3 mechanisms didn't run
-- [visual-summary_v5.html](../visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
+- [visual-summary_v5.html](../visual-summary_v5.html) — interactive status dashboard
+
+Historical (archived): `../zz_archive/SPRINT_0_ROOT_CAUSES.md` · `../zz_archive/LEARNING_SYSTEM_100.md` · `../zz_archive/audit_historical/`
 
 ## Fixes — READ THIS FIRST
 
@@ -45,17 +45,9 @@
 - [Fix 14 — Singleton + threshold + EWC](../zz_archive/fixes_iterative/14_race-threshold-ewc.md) — self-protect + config
 - [Fix 15 — Post-action feedback](../zz_archive/fixes_iterative/15_post-action-feedback.md) — success/fail → pattern usage
 
-## Audits
+## Audits (archived)
 
-### v5 (current)
-- [20260418 Final audit](audit/20260418_audit_v5_final.md) — S1:7/10 S2:7/10, all services wired
-- [20260418 Clean install](audit/20260418_audit_v5_clean_install.md) — nuke + bootstrap verification
-- [20260418 Fix 16-18](audit/20260418_audit_v5_fix16_17_18_final.md) — improvement analysis
-
-### v4 lean daemon (historical)
-- [20260417 audit 96% final](audit/20260417_audit_96pct_final_bayesian_ewc.md)
-- [20260417 audit v5 e2e](audit/20260417_audit_v5_e2e.md) — first v5 e2e (IMPROVEMENT=0%)
-- [20260416 final audit 93%](audit/20260416_final_audit_93pct.md)
+All audit logs 2026-04-16 → 2026-04-18 are in `../zz_archive/audit_historical/`. Latest active status: see `visual-summary_v5.html`.
 
 ## ADRs — clean unified (7 active)
 

@@ -368,9 +368,9 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
 
 <div class="tldr">
   <strong>Engineering is done.</strong> What remains is runtime — more sessions to accumulate EWC samples,
-  diverge rbank confidence, populate pattern quality distributions. See <code>doc/LEARNING_SYSTEM_100.md</code>
-  for the finish line, <code>doc/SPRINT_0_ROOT_CAUSES.md</code> for Protocol 2 analysis, and
-  <code>doc/fixes/</code> for the final blockers traced and resolved.
+  diverge rbank confidence, populate pattern quality distributions. See <code>doc/fixes/</code> for the
+  final state, and <code>zz_archive/LEARNING_SYSTEM_100.md</code> + <code>zz_archive/SPRINT_0_ROOT_CAUSES.md</code>
+  for the historical Protocol 2 analysis.
 </div>
 
 <h2>9. ADRs — Clean Unified</h2>
@@ -408,14 +408,11 @@ rufloV3_bootstrap_v5/
 │   └── @ruvector/ruvllm-native/ — ruvllm NAPI (VerdictAnalyzer) + src/ for reproducibility
 ├── doc/
 │   ├── adr/                    — 7 clean unified ADRs
-│   ├── fixes/           — UPSTREAM.md + IMPLEMENTATION.md (canonical)
-│   ├── audit/                  — e2e audit results
-│   ├── reference/              — foxref + ruvector-crate-mapping
-│   ├── support_tools/          — gitnexus + pi-brain + ruvector-catalog guides
-│   ├── LEARNING_SYSTEM_100.md  — post Sprint 0 roadmap
-│   ├── SPRINT_0_ROOT_CAUSES.md — protocol 2 + 10xwhy (v2 corrected)
+│   ├── fixes/                  — UPSTREAM.md + IMPLEMENTATION.md (canonical)
+│   ├── support_tools/          — gitnexus + pi-brain + ruvector-catalog + foxref/
+│   ├── INDEX.md                — doc navigation
 │   └── TODO-v5.md              — honest next steps
-├── zz_archive/                 — iterative backups (fixes, ADRs, v3/v4 legacy)
+├── zz_archive/                 — iterative backups, audits, v3/v4 legacy, historical docs
 └── package.json                — deps: @ruvector/*, @claude-flow/*, @xenova/*
 </pre>
 
