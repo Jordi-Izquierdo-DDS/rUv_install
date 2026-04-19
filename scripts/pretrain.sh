@@ -5,13 +5,35 @@
 # 2. Bridges Q-learning patterns → SonaEngine trajectories (forceLearn)
 # 3. Persists sona state for cross-session use
 #
-# Usage: bash scripts/pretrain.sh [--target /path/to/project]
-# Default target: $PWD
+# Usage:
+#   bash scripts/pretrain.sh                                # defaults, $PWD
+#   bash scripts/pretrain.sh --target /path                 # default depth (upstream = 100)
+#   bash scripts/pretrain.sh --target /path --depth 10      # limit git history to 10 commits (fast)
+#   bash scripts/pretrain.sh --target /path --skip-git      # file structure only, no git
+#   bash scripts/pretrain.sh --target /path --verbose       # detailed upstream progress
+#
+# All knobs are UPSTREAM (agentic-flow hookPretrainTool) parameters. No invented limits.
 
 set -euo pipefail
 
-TARGET="${1:-$PWD}"
-if [ "$1" = "--target" ] && [ -n "${2:-}" ]; then TARGET="$2"; fi
+TARGET="$PWD"
+DEPTH=100      # upstream default
+SKIP_GIT=false
+SKIP_FILES=false
+VERBOSE=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target)      TARGET="$2"; shift 2 ;;
+    --target=*)    TARGET="${1#*=}"; shift ;;
+    --depth)       DEPTH="$2"; shift 2 ;;
+    --depth=*)     DEPTH="${1#*=}"; shift ;;
+    --skip-git)    SKIP_GIT=true; shift ;;
+    --skip-files)  SKIP_FILES=true; shift ;;
+    --verbose)     VERBOSE=true; shift ;;
+    *)             echo "Unknown arg: $1" >&2; exit 2 ;;
+  esac
+done
+TARGET="$(cd "$TARGET" && pwd)"
 
 SOCK="$TARGET/.claude-flow/ruvector-daemon.sock"
 PID_FILE="$TARGET/.claude-flow/ruvector-daemon.pid"
@@ -43,11 +65,17 @@ const net = require('net');
   const toolPath = path.join('$TARGET',
     'node_modules/agentic-flow/dist/mcp/fastmcp/tools/hooks/pretrain.js');
   const { hookPretrainTool } = await import(toolPath);
+  const t0 = Date.now();
   const result = await hookPretrainTool.execute(
-    { projectDir: '$TARGET' },
-    { onProgress: () => {} }
+    {
+      depth: $DEPTH,
+      skipGit: $SKIP_GIT,
+      skipFiles: $SKIP_FILES,
+      verbose: $VERBOSE,
+    },
+    { onProgress: (p) => { if ($VERBOSE) console.log('    upstream:', p.message); } }
   );
-  console.log('  upstream:', result.filesAnalyzed, 'files,', result.patternsCreated, 'patterns');
+  console.log('  upstream:', result.filesAnalyzed, 'files,', result.patternsCreated, 'patterns,', result.memoriesStored, 'memories,', result.coEditsFound, 'co-edits (' + ((Date.now()-t0)/1000).toFixed(1) + 's)');
 
   // 2. Bridge Q-learning patterns → sona via daemon IPC
   const intelPath = path.join('$TARGET', '.agentic-flow', 'intelligence.json');
@@ -64,51 +92,108 @@ const net = require('net');
     c.on('error', () => { clearTimeout(timer); resolve(null); });
   });
 
-  // Convert Q-learning states to realistic task descriptions that SemanticRouter
-  // can route correctly. "edit .ts" → "implement TypeScript module" — same quality
-  // as what a real user prompt would produce through the live system.
-  const stateToTask = {
-    'edit:.ts': 'implement TypeScript module', 'edit:.tsx': 'create React component',
-    'edit:.js': 'implement JavaScript module', 'edit:.mjs': 'implement ES module',
-    'edit:.cjs': 'implement CommonJS module', 'edit:.py': 'write Python script',
-    'edit:.rs': 'implement Rust module', 'edit:.go': 'implement Go service',
-    'edit:.css': 'fix CSS layout styling', 'edit:.html': 'create HTML page',
-    'edit:.yml': 'configure deployment pipeline', 'edit:.yaml': 'configure deployment pipeline',
-    'edit:.sh': 'write shell deployment script', 'edit:.json': 'configure project settings',
-    'edit:.java': 'implement Java class', 'edit:.kt': 'implement Kotlin module',
-    'edit:.php': 'implement PHP endpoint', 'edit:.rb': 'implement Ruby module',
-    'edit:.cs': 'implement C# class', 'edit:.cpp': 'implement C++ module',
-    'edit:.c': 'implement C module', 'edit:.h': 'define C header interface',
-    'edit:.sql': 'write database query', 'edit:.proto': 'define API protocol buffer',
-    'edit:.md': 'review documentation', 'edit:.test': 'write test cases',
-    'edit:.vue': 'create Vue component', 'edit:.dart': 'implement Dart widget',
-    'edit:.swift': 'implement Swift module',
+  // Option C: use every bit of data upstream already collected.
+  //   1. Q-patterns seeded with REAL file samples of that extension
+  //      (embeddings land in the same space as future live prompts)
+  //   2. intel.memories (README/CLAUDE.md/package.json excerpts) seeded
+  //      with route inferred via upstream getAgentForFile
+  //   3. intel.dirPatterns (directory → agent) sampled once per dir
+  // All routes come from upstream decisions — zero invention.
+
+  // Pre-compute Q normalization
+  let maxQ = 0;
+  for (const [, agents] of patterns) {
+    for (const q of Object.values(agents)) if (q > maxQ) maxQ = q;
+  }
+  if (maxQ === 0) maxQ = 1;
+
+  // Collect real file samples per extension (git ls-files, fallback to find)
+  const { execSync } = require('child_process');
+  let fileList = '';
+  try { fileList = execSync('git ls-files', { encoding: 'utf-8', maxBuffer: 50*1024*1024 }).trim(); } catch {}
+  if (!fileList) {
+    try { fileList = execSync('find . -type f', { encoding: 'utf-8', maxBuffer: 50*1024*1024 }).trim(); } catch {}
+  }
+  const filesByExt = {}, filesByDir = {};
+  for (const f of fileList.split('\n').filter(Boolean)) {
+    if (f.includes('node_modules/') || f.includes('/.git/') || f.startsWith('.git/')) continue;
+    const ext = path.extname(f);
+    if (!filesByExt[ext]) filesByExt[ext] = [];
+    if (filesByExt[ext].length < 2) filesByExt[ext].push(f);
+    const topDir = f.split('/')[0];
+    if (!filesByDir[topDir]) filesByDir[topDir] = [];
+    if (filesByDir[topDir].length < 1) filesByDir[topDir].push(f);
+  }
+
+  // Load upstream agent inference (no duplication)
+  let getAgentForFile = () => 'coder';
+  try {
+    const shared = await import(path.join('$TARGET', 'node_modules/agentic-flow/dist/mcp/fastmcp/tools/hooks/shared.js'));
+    if (shared.getAgentForFile) getAgentForFile = shared.getAgentForFile;
+  } catch {}
+
+  const readSample = (f) => {
+    try { return fs.readFileSync(path.join('$TARGET', f), 'utf-8').slice(0, 400); }
+    catch { return null; }
+  };
+  const seed = async (text, agent, quality) => {
+    if (!text) return false;
+    const b = await ipc({ command: 'begin_trajectory', text });
+    const s = agent ? await ipc({ command: 'set_trajectory_route', agent }) : { ok: true };
+    const e = await ipc({ command: 'end_trajectory', reward: quality });
+    return b?.ok && s?.ok && e?.ok;
   };
 
+  // 1. Q-patterns × real file content
+  let qDone = 0, qTotal = 0;
   for (const [state, agents] of patterns) {
     const bestAgent = Object.entries(agents).sort((a, b) => b[1] - a[1])[0];
     if (!bestAgent) continue;
-    // Use realistic task text that SemanticRouter can match (not "edit .ts")
-    const text = stateToTask[state] || state.replace(':', ' ');
-    const quality = Math.min(1.0, bestAgent[1] / 10);
-    await ipc({ command: 'begin_trajectory', text });
-    // route() uses SemanticRouter with realistic text → correct agent assignment
-    await ipc({ command: 'route', task: text });
-    await ipc({ command: 'end_trajectory', reward: quality });
+    const ext = state.replace('edit:', '');
+    const samples = (filesByExt[ext] || []).map(readSample).filter(Boolean);
+    const texts = samples.length > 0 ? samples : [state];
+    const quality = bestAgent[1] / maxQ;
+    for (const text of texts) {
+      qTotal++;
+      if (await seed(text, bestAgent[0], quality)) qDone++;
+    }
   }
+  console.log('  [1] Q-patterns × file samples: '+qDone+'/'+qTotal+' seeded (quality = Q/maxQ)');
 
-  // Don't forceLearn — let trajectories buffer. When live usage adds real
-  // trajectories, tick() triggers Loop B and clusters pretrain + live together.
-  // Live data's real quality dominates the clusters. Pretrain is warm-start only.
+  // 2. intel.memories (upstream already read + embedded these)
+  let mDone = 0;
+  const mems = intel.memories || [];
+  for (const m of mems) {
+    const text = (m.content || '').slice(0, 500);
+    const match = text.match(/^\[([^\]]+)\]/);
+    const filename = match ? match[1] : '';
+    const agent = filename ? getAgentForFile(filename) : null;
+    if (await seed(text, agent, 0.5)) mDone++;
+  }
+  console.log('  [2] memories (README/CLAUDE/package.json): '+mDone+'/'+mems.length+' seeded');
+
+  // 3. dirPatterns × one file sample (skip dirs already covered by Q-patterns)
+  let dDone = 0;
+  const dirs = Object.entries(intel.dirPatterns || {});
+  for (const [dir, agent] of dirs) {
+    const sample = (filesByDir[dir] || [])[0];
+    if (!sample) continue;
+    const text = readSample(sample);
+    if (await seed(text, agent, 0.4)) dDone++;
+  }
+  console.log('  [3] dir-patterns × sample file: '+dDone+'/'+dirs.length+' seeded');
+
+  // Don't forceLearn — let end_trajectory auto-cycle when buffer ≥10.
+  // Live sessions add real-quality trajectories; they dominate clusters.
   const stats = await ipc({ command: 'status' });
-  const s = stats?.data?.sona ? JSON.parse(stats.data.sona) : {};
-  console.log('  sona: '+s.trajectories_recorded+' trajectories buffered (not crystallized — waits for live data)');
+  const ss = stats?.data?.sona ? JSON.parse(stats.data.sona) : {};
+  console.log('  sona: '+(ss.trajectories_recorded || 0)+' trajectories buffered, '+(ss.patterns_stored || 0)+' patterns crystallized');
 
   // Persist buffered state
   await ipc({ command: 'session_end' });
   console.log('  state persisted');
-})().catch(e => console.log('ERROR:', e.message));
-" 2>/dev/null
+})().catch(e => { console.log('ERROR:', e.message); console.log(e.stack); process.exit(1); });
+"
 
 sleep 2
 echo "==> pretrain: stopping daemon"

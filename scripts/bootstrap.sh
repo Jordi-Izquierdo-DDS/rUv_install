@@ -152,8 +152,17 @@ fi
 
 # ─── 7. Cold-start pretrain (upstream Q-learning + sona bridge) ─────────────
 # One-shot operation — scripts/pretrain.sh, not part of daemon runtime.
+# Live output (no pipe) so operator can see each pattern being bridged.
+# Env knobs (all pass through to upstream agentic-flow hookPretrainTool):
+#   PRETRAIN_DEPTH=10        limit git history depth (default: upstream's 100)
+#   PRETRAIN_SKIP_GIT=1      skip git history entirely (file structure only)
+#   PRETRAIN_VERBOSE=1       print upstream progress messages
 if [ ! -f "$TARGET/.claude-flow/sona/state.json" ]; then
-  bash "$TARGET/scripts/pretrain.sh" --target "$TARGET" 2>&1 | tail -5 || {
+  ARGS=""
+  [ -n "${PRETRAIN_DEPTH:-}" ]    && ARGS="$ARGS --depth $PRETRAIN_DEPTH"
+  [ -n "${PRETRAIN_SKIP_GIT:-}" ] && ARGS="$ARGS --skip-git"
+  [ -n "${PRETRAIN_VERBOSE:-}" ]  && ARGS="$ARGS --verbose"
+  bash "$TARGET/scripts/pretrain.sh" --target "$TARGET" $ARGS || {
     echo "==> pretrain failed (non-fatal — first real session will cold-start)"
   }
 else

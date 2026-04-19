@@ -643,6 +643,18 @@ const H = {
     }
     return { ok: true, data: { trajectoryId: id, category, learnStatus, stored, storeErr, verdict, quality } };
   },
+  // Direct setTrajectoryRoute — lets callers (e.g. pretrain bridge) assign the
+  // pattern's model_route without going through route() / SemanticRouter.
+  // Used by pretrain phase 2 to propagate upstream Q-table decisions directly.
+  // Upstream: sona.setTrajectoryRoute (napi_simple.rs:109)
+  async set_trajectory_route(c) {
+    if (activeTrajId == null) return { ok: false, error: 'no active trajectory' };
+    if (!c.agent) return { ok: false, error: 'agent required' };
+    try { sona.setTrajectoryRoute(activeTrajId, c.agent); }
+    catch (e) { return { ok: false, error: e.message }; }
+    if (activeTrajSeed) activeTrajSeed.routedAgent = c.agent;
+    return { ok: true };
+  },
   // Tier 2 EXTENSION — IPC for hook-handler to fetch upstream code-analysis on demand.
   //   Pure passthrough to ruvector.extractAllPatterns (returns {functions, classes, imports, todos}).
   //   Hook-handler can invoke at PreToolUse/PostToolUse with a file path; daemon does the parse work.
