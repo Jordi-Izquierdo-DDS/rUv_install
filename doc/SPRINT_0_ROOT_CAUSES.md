@@ -1,283 +1,225 @@
-# Sprint 0 — Why They Didn't Run (Protocol 2 + 10xWhy)
+# Sprint 0 — Why They Didn't Run (Protocol 2 + 10xWhy, v2 corrected)
 
 **Date:** 2026-04-19
-**Scope:** Root cause analysis on why 3 mechanisms (accessCount, EWC++, findPatterns telemetry) never fired despite active sessions.
+**Scope:** Root cause analysis on why 3 mechanisms never fired.
+**Revision:** v2 — after deeper upstream API review, initial "dead code" claim was wrong. Upstream design is correct; we're using it wrong.
 
 ---
 
-## Hypothesis (what we expected)
+## Initial hypothesis (WRONG)
 
 After 19 trajectories, 6 consolidations, 95+ findPatterns calls across real sessions:
-- `access_count` should be > 0 on retrieved patterns
-- `ewc_task_count` should be > 0 after SessionEnd consolidation
-- Daemon log should show findPatterns telemetry
+- `access_count` should be > 0 on retrieved patterns → observed 0
+- `ewc_task_count` should be > 0 after SessionEnd consolidation → observed 0
+- Daemon log should show findPatterns telemetry → none
 
-All three observed: **0, 0, 0**.
+**Initial v1 conclusion:** sona's `touch()` is "dead code upstream", fix requires Rust rebuild.
 
-Not "they need more data" — they're actively NOT executing the increment paths. Let's trace why.
+**This was wrong.** Deeper analysis shows upstream has the right API, we're not calling it correctly.
 
 ---
 
-## Root Cause 1: accessCount — the increment function is DEAD CODE
+## Root Cause 1: access_count — we misread upstream intent
 
-### 10xWhy
+### What I got wrong in v1
 
-```
-Q: Why is access_count = 0 on all 22 patterns?
-A: The sona NAPI find_patterns never increments it.
-   ↓
-Q: Why?
-A: find_patterns calls engine.find_patterns (napi_simple.rs:190-194)
-   which calls reasoning_bank.read().find_similar (engine.rs:121-128).
-   ↓
-Q: Why doesn't find_similar increment?
-A: find_similar takes &self (read lock), returns Vec<&LearnedPattern>
-   (immutable refs). It can't mutate. (reasoning_bank.rs:362-373)
-   ↓
-Q: But there's a touch() method in types.rs:312-317 that increments.
-   Who calls it?
-A: NOBODY. `grep -rn ".touch()" crates/sona/src/` → 0 results.
-   ↓
-Q: Why is touch() dead code?
-A: UPSTREAM OMISSION. The method was designed for access tracking
-   but was never wired into the retrieval path.
-```
+I reported `touch()` was "dead code" because zero callers in the sona crate. Technically true — but misses the design.
 
-### Verified via Protocol 2
+### What upstream actually designs
 
-1. **foxref §2.3:** access_count is part of the `LearnedPattern` metadata — foxref expects it to track retrieval usage
-2. **gitnexus callers:** `touch()` has 0 callers in sona crate
-3. **Source:** `types.rs:312-317` (definition) vs `reasoning_bank.rs:362` (read-only) — no mutation
-4. **Empirical:** 22 patterns × ~5 retrievals × 19 queries = ~95 access events expected. Observed: 0.
+**Two separate retrieval APIs, two separate feedback mechanisms:**
 
-### Why not "ours to fix locally"
+**Sona `ReasoningBank::find_similar`** (`crates/sona/src/reasoning_bank.rs:362`)
+- Read-only by design (Loop A reactive — sub-millisecond, can't afford write lock)
+- access_count on sona patterns is **not a retrieval metric** — it's only:
+  - Bumped by `merge()` when two patterns merge during extract_patterns (types.rs:301)
+  - Read by `prune_patterns()` as a pruning threshold
+- **No retrieval tracking by design.** Our expectation "findPatterns bumps access_count" was wrong.
 
-The NAPI is downstream of find_similar. We could change:
-1. `find_similar` to take `&mut self` and call touch() — breaks read/write contract, affects 9+ callers
-2. Add `record_access(id)` NAPI method — cleaner, caller-driven
-3. Wrap find_patterns to mutably touch after query — our napi_simple.rs extension
+**Ruvllm `PatternStore::record_usage(id, success, quality)`** (`crates/ruvllm/src/reasoning_bank/pattern_store.rs:751`)
+- **Explicit feedback API** — public Rust method, fully implemented
+- Updates `usage_count`, `success_count`, `confidence`
+- Called by caller AFTER deciding pattern was useful
+- **This IS the retrieval feedback mechanism** — just for ruvllm patterns, not sona
 
-**Fix path:** option 3 (minimal change, contained to our vendor rebuild).
+### The actual gap
+
+Our ruvllm NAPI (vendor/@ruvector/ruvllm-native) exposes:
+- `storeAndAnalyze` ✓
+- `analyzeOnly` ✓
+- `searchSimilar` ✓ (retrieve)
+- `pruneLowQuality` ✓
+- `exportPatterns` / `importPatterns` ✓
+- `stats` ✓
+- **`recordUsage` ❌ MISSING**
+
+Upstream has it. We don't expose it. Our daemon never calls it after using a pattern. That's the loop break.
+
+### Fix
+
+**File:** `_UPSTREAM_20260308/ruvector_GIT_v2.1.2_20260409/crates/ruvllm/src/napi_simple.rs`
+
+Add one NAPI method (our own file, 5 LOC):
 
 ```rust
 #[napi]
-pub fn find_patterns(&self, query: Vec<f64>, k: u32) -> Vec<JsLearnedPattern> {
-    let q: Vec<f32> = query.iter().map(|&x| x as f32).collect();
-    // Acquire write lock, touch matches, return clones
-    let mut bank = self.inner.coordinator().reasoning_bank().write();
-    let ids: Vec<u64> = bank.find_similar(&q, k as usize).iter()
-        .map(|p| p.id).collect();
-    for id in &ids {
-        if let Some(p) = bank.get_pattern_mut(*id) { p.touch(); }
-    }
-    ids.iter().filter_map(|id| bank.get_pattern(*id))
-        .cloned().map(JsLearnedPattern::from).collect()
+pub fn record_usage(&self, pattern_id: u32, was_successful: bool, quality: f64) -> napi::Result<()> {
+    self.bank.pattern_store()
+        .record_usage(pattern_id as u64, was_successful, quality as f32);
+    Ok(())
 }
 ```
 
-**LOC:** ~15 lines Rust, 1 rebuild.
+**Daemon change** (`.claude/helpers/ruvector-daemon.mjs`):
+
+In `route()`, after deciding agent from rbank patterns, call `reasoningBank.recordUsage(pattern.id, wasUsedForFinalDecision, priorBoost.rbankQuality)`.
+
+### What about sona access_count?
+
+**Leave it.** Upstream design doesn't track retrieval access on sona patterns. Our assumption was wrong. The field exists for merge semantics + pruning threshold, not retrieval tracking. Accepting this means:
+- `access_count: 0` forever is correct
+- Pruning still works (we pass `min_accesses: 0` to prune, so it never filters by access)
+- No rebuild of sona needed for this
+
+**LOC:** ~5 Rust (ruvllm NAPI) + ~3 JS (daemon call after route()). One ruvllm-native rebuild.
 
 ---
 
-## Root Cause 2: EWC++ — trapped behind THREE gates, none met
+## Root Cause 2: EWC++ — correct gate, invisible progress
 
-### 10xWhy
+### What I got right in v1
 
-```
-Q: Why is ewc_task_count = 0 after 6 consolidations?
-A: consolidate_all_tasks() runs, but task_memory is EMPTY.
-   Early return at ewc.rs:281-283 if empty.
-   ↓
-Q: Why is task_memory empty?
-A: Only populated by start_new_task() (ewc.rs:175-188).
-   Only caller: background.rs:156.
-   ↓
-Q: Why doesn't background.rs:156 fire?
-A: Guarded by `if task_boundary` (background.rs:154). Requires
-   detect_task_boundary() = true.
-   ↓
-Q: What does detect_task_boundary need?
-A: THREE conditions (ewc.rs:147-171):
-   1. samples_seen >= 50
-   2. gradient length == config.param_count
-   3. avg_z_score > boundary_threshold
-   ↓
-Q: Why is samples_seen < 50?
-A: samples_seen only increments in update_fisher() (ewc.rs:124).
-   update_fisher only called from background.rs:162 INSIDE run_cycle().
-   ↓
-Q: So samples_seen grows 1-per-run_cycle. We had 4 completed cycles.
-   samples_seen = 4. Threshold = 50. Need 46 more cycles.
-A: CORRECT. With 19 trajectories producing 22 patterns across 4 successful
-   forceLearn calls, we've accumulated ~4 gradient samples. 46 more to go.
-```
+Chain: `consolidate_all_tasks` → needs `task_memory` non-empty → `start_new_task` → `detect_task_boundary` → `samples_seen >= 50` → `update_fisher` (1 sample per `run_cycle`).
 
-### Verified via Protocol 2
+With 4 completed cycles, we're at ~4/50 samples. Not broken, just gated.
 
-1. **foxref §1.3:** EWC++ consolidates at SessionEnd — but only after gradient distribution has enough signal to detect task boundaries
-2. **Source chain:**
-   - `consolidate_all_tasks()` requires `!task_memory.is_empty()` (ewc.rs:281)
-   - `task_memory.push_back()` only in `start_new_task()` (ewc.rs:188)
-   - `start_new_task()` only called if `detect_task_boundary()==true` (background.rs:154-156)
-   - `detect_task_boundary()` requires `samples_seen >= 50` (ewc.rs:148)
-   - `samples_seen += 1` only in `update_fisher()` (ewc.rs:124)
-   - `update_fisher()` only called during `run_cycle` (background.rs:162)
-3. **Empirical:** 4 run_cycles completed → ~4 samples_seen → far below 50 threshold
+### What's still correct
 
-### This is NOT a bug
+EWC++ is upstream working as designed. The 50-sample threshold is a calibration minimum for reliable z-score detection of distribution shifts (`ewc.rs:148`). Lowering it would cause false-positive task boundaries.
 
-It's correct upstream behavior. EWC++ needs enough gradient samples to reliably detect distribution shifts. 50 is the calibration threshold from `crates/sona/src/ewc.rs:148`.
+### The real gap: visibility, not mechanism
 
-### Why we can't see it ticking
+Current `getStats()` output (`napi_simple.rs:200-203`) returns `CoordinatorStats` — which does NOT include EWC internals. We can't see progress toward the 50 gate.
 
-`samples_seen` is not exposed through the NAPI or via getStats. We have NO visibility into progress toward the 50-sample threshold.
+### Fix (minimal, upstream-aligned)
 
-### Fix path
+**File:** `crates/sona/src/napi_simple.rs`
 
-**Not a bug to fix — a metric to expose.** Add to NAPI:
+Add one NAPI accessor (our own file, 8 LOC):
 
 ```rust
+/// EWC++ internal stats — samples_seen progress toward task-boundary detection gate
 #[napi]
 pub fn ewc_stats(&self) -> String {
     let ewc = self.inner.coordinator().ewc().read();
     serde_json::json!({
         "samples_seen": ewc.samples_seen(),
         "task_count": ewc.task_count(),
-        "threshold_remaining": 50u64.saturating_sub(ewc.samples_seen()),
+        "remaining_to_detection": 50u64.saturating_sub(ewc.samples_seen()),
     }).to_string()
 }
 ```
 
-Then we can see "37/50 samples — 13 cycles to first consolidation" in the pulse check.
+Both `samples_seen()` and `task_count()` are already public accessors on EwcPlusPlus (ewc.rs:325, 335). No Rust logic change — just a NAPI-visibility add.
 
-**Or:** Lower the threshold. Config `boundary_detection_threshold` exists — could tune for faster feedback in small projects. Not invention — upstream config knob.
+**LOC:** ~8 Rust. One sona rebuild.
 
-**LOC:** ~10 lines Rust for telemetry, 0 for config tuning.
+### Alternative: skip the rebuild
+
+If we don't want to rebuild, we can simply wait. The 50-sample gate will be met after ~50 successful background cycles. With 1 session per day and 1 cycle per session, ~7 weeks. With more active use, faster.
+
+**Trade-off:** sona rebuild = ~3h, gives us visibility. Waiting = free, but blind.
 
 ---
 
-## Root Cause 3: findPatterns telemetry — the daemon never logs it
+## Root Cause 3: findPatterns telemetry — never added
 
-### 10xWhy
+**No changes to v1 analysis.** This is purely a daemon handler edit.
 
-```
-Q: Why can't I see findPatterns hit rate?
-A: Daemon doesn't log find_patterns calls.
-   ↓
-Q: Why not?
-A: The handler (ruvector-daemon.mjs:630-633) is minimal:
-      async find_patterns(c) {
-        const vec = await embed(c.text || '');
-        return { ok: true, data: sona.findPatterns(vec, c.k ?? 5) };
-      }
-   No log() call. No counter.
-   ↓
-Q: Why was it designed this way?
-A: IPC handler pattern — terse passthroughs to sona. No side effects
-   beyond the NAPI call. Telemetry was never added because nobody needed
-   it until we asked "is retrieval actually working?"
-   ↓
-Q: Why do we need it now?
-A: Without it, Root Cause 1 (access_count=0) would look identical to
-   "findPatterns broken entirely". We need to distinguish "queries happen
-   but don't track access" from "queries don't happen at all".
-```
+### Fix (no rebuild)
 
-### Verified via Protocol 2
-
-1. **Source:** `ruvector-daemon.mjs:630-633` — confirmed no logging
-2. **Daemon log:** zero `find_patterns` entries across 57 log lines (all sessions)
-3. **Empirical:** 19 UserPromptSubmit events → 19 find_patterns calls expected → 0 visible
-
-### Fix path
-
+`ruvector-daemon.mjs:630-633`:
 ```javascript
 async find_patterns(c) {
   const vec = await embed(c.text || '');
   const patterns = sona.findPatterns(vec, c.k ?? 5);
   const topQ = patterns[0]?.avgQuality ?? 0;
   const topR = patterns[0]?.modelRoute ?? 'none';
-  log(`findPatterns: text=${(c.text||'').slice(0,40)} hits=${patterns.length} top=${topR}@q${topQ.toFixed(2)}`);
+  log(`findPatterns: q="${(c.text||'').slice(0,40)}" hits=${patterns.length} top=${topR}@q${topQ.toFixed(2)}`);
   return { ok: true, data: patterns };
 }
 ```
 
-**LOC:** +4 lines. No NAPI change. Immediate visibility.
+**LOC:** 4 lines. No rebuild.
 
 ---
 
-## The common pattern
+## Revised assessment
 
-| Root Cause | Category | Why it didn't run |
+| Item | v1 (wrong) | v2 (correct) |
 |---|---|---|
-| accessCount | **Dead code upstream** | touch() method exists but never wired to retrieval path |
-| EWC++ | **Threshold not met** | Correct behavior — 50-sample gate, we have ~4 |
-| findPatterns log | **Observability gap** | Never logged because never asked |
-
-**None of them are broken wiring in OUR code.** #1 is an upstream omission, #2 is correct but invisible, #3 is something we never added.
+| access_count | "Dead code upstream, rebuild sona" | **Upstream design doesn't track retrieval. Accept as vestigial. Use ruvllm.record_usage instead.** |
+| EWC | "Investigate NAPI gap" | **Correct upstream, gated at 4/50 samples. Add ewc_stats() for visibility OR wait.** |
+| findPatterns log | "4 lines" | Same — 4 lines. |
 
 ---
 
-## Sprint 0 — Unblock observability first
+## The common pattern — v2
 
-**Goal:** see what's actually happening inside the learning system before trying to fix it.
+| Root Cause | Category | Real action |
+|---|---|---|
+| access_count | **Wrong expectation** | Stop expecting it to track retrieval. Use ruvllm.record_usage. |
+| EWC samples | **Correct but invisible** | Accept 50-gate + add telemetry accessor |
+| findPatterns log | **Missing telemetry** | Add 4 lines |
 
-### Sprint 0.1: findPatterns telemetry (30 min, 0 upstream)
-
-**File:** `.claude/helpers/ruvector-daemon.mjs`
-
-Add 4 lines to `find_patterns` handler. No rebuild, no restart workflow change.
-
-**Verifies:** query rate, hit count, top-1 quality/route per prompt.
-
-### Sprint 0.2: EWC telemetry (1-2h, 1 Rust rebuild)
-
-**File:** `_UPSTREAM_20260308/.../napi_simple.rs`
-
-Add `ewc_stats()` NAPI method exposing `samples_seen`, `task_count`, threshold progress.
-
-Also add to daemon `status` IPC output: `{ ewc: { samples_seen, remaining, task_count } }`.
-
-**Verifies:** progress toward 50-sample EWC activation gate.
-
-### Sprint 0.3: accessCount fix (2-4h, 1 Rust rebuild — combined with 0.2)
-
-**File:** `_UPSTREAM_20260308/.../napi_simple.rs`
-
-Change `find_patterns` to acquire write lock, call touch() on matches before returning. ~15 LOC.
-
-**Verifies:** patterns accumulate access_count, TC compression tiers can activate, pattern pruning can work.
-
-### Combined Rust rebuild
-
-Sprint 0.2 + 0.3 = one rebuild cycle:
-- Edit `napi_simple.rs` (~25 LOC)
-- Run `scripts/rebuild-sona.sh`
-- Deploy to `vendor/@ruvector/sona/sona.linux-x64-gnu.node`
-- Bootstrap auto-copies to node_modules
-
-**Effort:** 3-6 hours end-to-end for all three fixes.
+**None of these require invention or upstream fixes.** They require:
+1. Calling the right API (ruvllm.record_usage — already exists in Rust, needs NAPI binding we can add in our vendor)
+2. Adding read-only visibility accessor (ewc_stats — trivial passthrough)
+3. Adding a log line (trivial)
 
 ---
 
-## After Sprint 0, we will have
+## Sprint 0 — Minimal path
 
-1. **Visible query activity** — every findPatterns call logged with hit rate
-2. **Visible EWC progress** — "37/50 samples, 0 tasks consolidated, ~13 cycles remaining"
-3. **Working accessCount** — patterns mark themselves as accessed, TC compression tiers activate
+### 0.1: findPatterns telemetry (30 min, NO rebuild)
+- 4 lines in `ruvector-daemon.mjs`
+- Instant visibility into retrieval quality
 
-Then Sprint 1 (improvement metric) can be grounded in real measurements, not blind hope.
+### 0.2: record_usage binding (2h, ruvllm-native rebuild)
+- Add `record_usage(id, success, quality)` to `crates/ruvllm/src/napi_simple.rs`
+- Rebuild `vendor/@ruvector/ruvllm-native/ruvllm.linux-x64-gnu.node`
+- Daemon calls `reasoningBank.recordUsage(...)` in `route()` after pattern selected
+- Result: rbank `usage_count` actually increments, quality feedback closes
+
+### 0.3: EWC visibility (1h, sona rebuild)
+- Add `ewc_stats()` to `crates/sona/src/napi_simple.rs`
+- Rebuild `vendor/@ruvector/sona/sona.linux-x64-gnu.node`
+- Daemon includes EWC progress in status IPC
+- Result: we can see "37/50 samples, 0 tasks consolidated"
+
+### Combined effort
+
+- **Sprint 0.1:** 30 min, no rebuild
+- **Sprint 0.2 + 0.3:** 2 rebuilds OR 1 combined rebuild (both are vendor-overlay adds). ~3h end-to-end.
+- Total: ~4 hours for full observability + closed feedback loop on ruvllm patterns.
 
 ---
 
-## What this session's data tells us (grounded)
+## What we are NOT doing
 
-The "2 mechanisms don't run" observation is partly wrong:
+- NOT rebuilding sona to add touch() calls to find_similar — upstream design is correct
+- NOT rewriting find_patterns to take write lock — upstream design is correct
+- NOT forcing EWC to ignore the 50-gate — upstream design is correct
+- NOT inventing custom mechanisms — just exposing existing public Rust APIs via NAPI
 
-- **accessCount:** truly not running (upstream dead code) — BLOCKED, needs our fix
-- **EWC++:** running correctly but gated at ~4/50 samples — ON TRACK, needs more volume or gate tuning
-- **findPatterns log:** not running because never asked — CHEAP, needs 4 lines
+**All three fixes are "use what's already there, just through the NAPI we own."** This is consistent with the v4 "no invention" rule (`feedback_upstream_trust_no_invention.md`).
 
-Two of three are unblockable in <1 day once we rebuild sona. The third is a 30-minute handler edit.
+---
 
-**The learning system IS working.** We just can't see most of it working, and one telemetry mechanism has been dead since upstream shipped.
+## Lessons learned
+
+1. **"Dead code" claim requires checking all crates, not just one.** I grepped sona for `touch()` callers. Zero. Declared dead. But the design intent was in ruvllm (`record_usage`), a different crate. Protocol 2 means checking **the whole ecosystem**, not one file.
+
+2. **"Needs rebuild" is expensive — check if we're calling the wrong API first.** Before declaring a feature broken, verify we're exercising the correct upstream path.
+
+3. **Read-only retrieval + explicit feedback is a common IR design.** Treating retrieval as the implicit feedback signal is an anti-pattern (write amplification, performance cost on every read). Upstream chose the standard pattern. We assumed the anti-pattern was intended.
