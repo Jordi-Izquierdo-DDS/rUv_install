@@ -16,6 +16,9 @@
 - [Fix 18 — ruvllm NAPI: VerdictAnalyzer](fixes/18_ruvllm-napi-verdictanalyzer.md) — new vendor binary, root cause analysis
 - [Fix 19 — Gradient quality](fixes/19_gradient-quality-fix.md) — VerdictAnalyzer binary→gradient, tensorCompress export
 - [Fix 20 — Wiring root causes](fixes/20_wiring-root-causes.md) — ONNX prototype patch, classifyChange args+filePaths, TC data feed
+- [Fix 21 — findPatterns telemetry](fixes/21_findpatterns-telemetry.md) — daemon log per retrieval (hits, top-1 route + quality)
+- [Fix 22 — rbank record_usage](fixes/22_rbank-record-usage.md) — explicit feedback loop closed (upstream PatternStore::record_usage exposed via NAPI + daemon wiring)
+- [Fix 23 — EWC stats visibility](fixes/23_ewc-stats-visibility.md) — ewc_stats() NAPI: samples_seen + task_count + remaining_to_detection
 
 ### v4 lean daemon session (2026-04-16/17, RFV3_v0_test_init)
 - [Fix 01 — Bridge pretrain→intelligence](fixes/01_bridge-pretrain-to-intelligence.md) — connected Q-learning to PageRank

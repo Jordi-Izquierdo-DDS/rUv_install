@@ -460,9 +460,12 @@ async function route(taskText) {
   if (reasoningBank && priorBoost) {
     try {
       const rbPatterns = reasoningBank.searchSimilar(Array.from(emb), 3);
-      const rbAvgQ = rbPatterns.filter(p => p.similarity > 0.5).reduce((s, p) => s + p.avgQuality, 0) / (rbPatterns.filter(p => p.similarity > 0.5).length || 1);
+      const relevant = rbPatterns.filter(p => p.similarity > 0.5);
+      const rbAvgQ = relevant.reduce((s, p) => s + p.avgQuality, 0) / (relevant.length || 1);
       priorBoost.rbankQuality = rbAvgQ;
       priorBoost.rbankCount = rbPatterns.length;
+      // Fix 22: capture rbank pattern IDs for record_usage() at end_trajectory.
+      if (activeTrajSeed) activeTrajSeed.rbankIds = relevant.map(p => p.id);
     } catch (e) { log('route.rbank: ' + e.message); }
   }
 
@@ -499,7 +502,10 @@ const H = {
     let memory;
     try       { memory = { path: dbPath, stats: await db.getStats() }; }
     catch (e) { memory = { path: dbPath, error: e.message }; }
-    return { ok: true, data: { uptime: process.uptime(), sona: sona.getStats(), activeTrajectoryId: activeTrajId, memory } };
+    // Fix 23: EWC++ telemetry — samples_seen progress toward 50-sample task-boundary gate.
+    let ewc = null;
+    try { ewc = JSON.parse(sona.ewcStats()); } catch {}
+    return { ok: true, data: { uptime: process.uptime(), sona: sona.getStats(), ewc, activeTrajectoryId: activeTrajId, memory } };
   },
   // Embedding primitive — §3 self-improving path, not a §3.4 phase.
   //   Upstream: AdaptiveEmbedder.embed (ruvector · core/adaptive-embedder; the
@@ -514,7 +520,7 @@ const H = {
     const vec = await embed(c.text || '');
     activeTrajId = sona.beginTrajectory(vec);
     // Capture seed for Phase 6 STORE at end_trajectory. embedding reused (no re-embed).
-    activeTrajSeed = { prompt: c.text || '', embedding: vec, startedAt: Date.now(), steps: 0, stepActions: [], filePaths: [], routedAgent: null };
+    activeTrajSeed = { prompt: c.text || '', embedding: vec, startedAt: Date.now(), steps: 0, stepActions: [], filePaths: [], rbankIds: [], routedAgent: null };
     return { ok: true, data: { trajectoryId: activeTrajId } };
   },
   // Phase 1 CAPTURE (pre/post tool step) · Loop A · reactive
@@ -576,6 +582,15 @@ const H = {
     // tick() checks Loop B gate (enough trajectories? enough time?). Cheap, <1ms.
     let learnStatus = null;
     try { learnStatus = sona.tick(); } catch {}
+
+    // Fix 22: record usage feedback on rbank patterns retrieved during route().
+    // Closes the explicit feedback loop per upstream PatternStore::record_usage design.
+    if (reasoningBank && seed?.rbankIds?.length) {
+      const wasSuccessful = quality >= 0.5;
+      for (const pid of seed.rbankIds) {
+        try { reasoningBank.recordUsage(pid, wasSuccessful, quality); } catch (e) { log('recordUsage: ' + e.message); break; }
+      }
+    }
 
     // Tier 1: feed substrate.coherence.observe(prompt-embedding, sessionTag) — drift/coherence pipeline.
     //   Pure observation; no formula. Used at session-end via substrate.onSessionEnd report().
@@ -668,7 +683,12 @@ const H = {
   //   @ruvector/sona · crates/sona/src/napi_simple.rs.
   async find_patterns(c) {
     const vec = await embed(c.text || '');
-    return { ok: true, data: sona.findPatterns(vec, c.k ?? 5) };
+    const patterns = sona.findPatterns(vec, c.k ?? 5);
+    // Fix 21: retrieval telemetry — visibility into "did findPatterns actually find anything?"
+    const topQ = patterns[0]?.avgQuality ?? 0;
+    const topR = patterns[0]?.modelRoute ?? 'none';
+    log(`findPatterns: q="${(c.text||'').slice(0,40)}" hits=${patterns.length} top=${topR}@q${topQ.toFixed(2)}`);
+    return { ok: true, data: patterns };
   },
   // Loop-B background check (buffer/time gate) · Upstream: SonaEngine.tick
   //   returns Option<String>; @ruvector/sona.

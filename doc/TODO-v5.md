@@ -38,11 +38,17 @@
 
 ## 🎯 What's next to reach 100%
 
-**See `doc/LEARNING_SYSTEM_100.md` for the detailed roadmap.** Summary:
+**See `doc/LEARNING_SYSTEM_100.md` + `doc/SPRINT_0_ROOT_CAUSES.md` for full roadmap.**
 
-- **Upstream-blocked (need Rust work):** accessCount increment on findPatterns, EWC++ consolidation trigger, route diversity issue
-- **Instrumentation gaps:** findPatterns hit rate invisible, no session-over-session improvement metric
-- **Plumbing:** TensorCompress has 22 tensors but 0% savings (needs access signal for compression tier)
+### Sprint 0 — DONE (2026-04-19)
+- [x] Fix 21: findPatterns telemetry in daemon log (+4 LOC)
+- [x] Fix 22: rbank record_usage — upstream + NAPI + daemon wiring (closed feedback loop)
+- [x] Fix 23: EWC stats visible — samples_seen progress toward 50-sample gate
+
+### Remaining
+- **sona access_count:** upstream design doesn't track retrieval access — leave vestigial
+- **Rbank/C4 count mismatch:** investigate rbank internal pruning (12 vs 19)
+- **Sprint 1:** session-over-session improvement metric script
 
 ## 🔧 Must fix (P0/P1)
 

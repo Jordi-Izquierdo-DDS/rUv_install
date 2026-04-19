@@ -46,6 +46,25 @@ index 93a61548..f74c7c4b 100644
  pub mod adapter_manager;
  pub mod autodetect;
  pub mod backends;
+diff --git a/crates/ruvllm/src/reasoning_bank/mod.rs b/crates/ruvllm/src/reasoning_bank/mod.rs
+index dcb7c8e2..83ba9488 100644
+--- a/crates/ruvllm/src/reasoning_bank/mod.rs
++++ b/crates/ruvllm/src/reasoning_bank/mod.rs
+@@ -403,6 +403,14 @@ impl ReasoningBank {
+ 
+         Ok(imported)
+     }
++
++    /// Record pattern usage — explicit feedback after caller used a retrieved pattern.
++    /// Increments usage_count, success_count (if successful), updates confidence.
++    /// Added by ruflo v5 Fix 22 — upstream PatternStore::record_usage exists (pattern_store.rs:751)
++    /// but ReasoningBank didn't expose it publicly. This is the retrieval feedback API.
++    pub fn record_usage(&self, pattern_id: u64, was_successful: bool, quality: f32) {
++        self.pattern_store.read().record_usage(pattern_id, was_successful, quality);
++    }
+ }
+ 
+ #[cfg(test)]
 diff --git a/crates/sona/src/napi.rs b/crates/sona/src/napi.rs
 index 7ecd5293..e712ebbd 100644
 --- a/crates/sona/src/napi.rs
@@ -68,10 +87,10 @@ index 7ecd5293..e712ebbd 100644
      }
  }
 diff --git a/crates/sona/src/napi_simple.rs b/crates/sona/src/napi_simple.rs
-index 2a4692e4..7492030c 100644
+index 2a4692e4..35c58f24 100644
 --- a/crates/sona/src/napi_simple.rs
 +++ b/crates/sona/src/napi_simple.rs
-@@ -215,6 +215,53 @@ impl SonaEngine {
+@@ -215,6 +215,72 @@ impl SonaEngine {
      pub fn is_enabled(&self) -> bool {
          self.inner.is_enabled()
      }
@@ -122,10 +141,29 @@ index 2a4692e4..7492030c 100644
 +            .write()
 +            .prune_patterns(min_quality as f32, min_accesses, max_age_secs as u64);
 +    }
++
++    /// Fix 23 — EWC++ internal telemetry. Exposes samples_seen progress toward
++    /// the 50-sample task-boundary detection gate (ewc.rs:148), plus task_count
++    /// (non-zero after first boundary detected). Returns JSON string.
++    ///   {
++    ///     "samples_seen": u64,  // 0..∞, incremented once per background run_cycle
++    ///     "task_count":   usize, // 0 until first task_boundary detected
++    ///     "remaining_to_detection": u64  // 50 - samples_seen, saturating
++    ///   }
++    #[napi]
++    pub fn ewc_stats(&self) -> String {
++        let ewc = self.inner.coordinator().ewc().read();
++        let samples = ewc.samples_seen();
++        serde_json::json!({
++            "samples_seen": samples,
++            "task_count": ewc.task_count(),
++            "remaining_to_detection": 50u64.saturating_sub(samples),
++        }).to_string()
++    }
  }
  
  /// SONA configuration for Node.js
-@@ -267,6 +314,8 @@ pub struct JsLearnedPattern {
+@@ -267,6 +333,8 @@ pub struct JsLearnedPattern {
      pub access_count: u32,
      /// Pattern type
      pub pattern_type: String,
@@ -134,7 +172,7 @@ index 2a4692e4..7492030c 100644
  }
  
  impl From<LearnedPattern> for JsLearnedPattern {
-@@ -281,6 +330,7 @@ impl From<LearnedPattern> for JsLearnedPattern {
+@@ -281,6 +349,7 @@ impl From<LearnedPattern> for JsLearnedPattern {
              last_accessed: pattern.last_accessed.to_string(),
              access_count: pattern.access_count,
              pattern_type: format!("{:?}", pattern.pattern_type),

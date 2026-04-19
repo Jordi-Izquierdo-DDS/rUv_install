@@ -156,6 +156,16 @@ impl JsReasoningBank {
         Ok(results.into_iter().map(JsPattern::from_result).collect())
     }
 
+    /// Record pattern usage — explicit feedback after using a retrieved pattern.
+    /// Fix 22: exposes upstream PatternStore::record_usage (pattern_store.rs:751).
+    /// Updates usage_count, success_count, and confidence for the pattern.
+    #[napi]
+    pub fn record_usage(&self, pattern_id: u32, was_successful: bool, quality: f64) -> napi::Result<()> {
+        let bank = self.inner.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        bank.record_usage(pattern_id as u64, was_successful, quality as f32);
+        Ok(())
+    }
+
     /// Prune low-quality patterns
     #[napi]
     pub fn prune_low_quality(&self, min_quality: f64) -> napi::Result<u32> {
