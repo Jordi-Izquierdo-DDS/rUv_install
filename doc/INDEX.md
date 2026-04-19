@@ -57,15 +57,17 @@
 - [20260417 audit v5 e2e](audit/20260417_audit_v5_e2e.md) — first v5 e2e (IMPROVEMENT=0%)
 - [20260416 final audit 93%](audit/20260416_final_audit_93pct.md)
 
-## ADRs (7 total)
+## ADRs — clean unified (7 active)
 
-- [ADR-000 — DDD + §3.4 phase table](adr/000-DDD.md) — base record, component selection, §2 protocol
-- [ADR-001 — Memory graceful degradation](adr/001-memory-graceful-degradation.md) — C4 chain
-- [ADR-002 — Local ruvector_brain **RESOLVED**](adr/002-ruvector-brain-deferred.md) — + vendor carve-out 2026-04-15
-- [ADR-004 — MinCut deferred](adr/004-mincut-integration-deferred.md) — REFINE gap in cycle
-- [ADR-005 — v4 alpha published-npm-only](adr/005-v4-alpha-published-npm-only.md) — + §7 vendor rebuild
-- [ADR-007 — Daemon service lifecycle](../_doc/adr/007-daemon-service-lifecycle.md) — session vs daemon scope
-- [ADR-008 — LOC cap 850→1200](../_doc/adr/008-loc-cap-raise-and-composition-discipline.md) — composition discipline
+See [adr/README.md](adr/README.md) for full index + reading order. Previous iterative ADRs archived in `doc/adr_iterative_backup/` and `_doc/adr_iterative_backup/`.
+
+- [ADR-001 — Domain + Protocol 2](adr/001-domain-and-protocol.md) — what ruflo is, 3-layer arch, research discipline
+- [ADR-002 — Learning cycle](adr/002-learning-cycle.md) — 7 phases × 3 loops, foxref-aligned
+- [ADR-003 — Memory persistence](adr/003-memory-persistence.md) — 5 layers + graceful degradation
+- [ADR-004 — REFINE deferred](adr/004-refine-deferred.md) — MinCut/GNN re-open triggers
+- [ADR-005 — Vendor NAPI overlay](adr/005-vendor-napi-overlay.md) — 4 upstream patches (see fixes_merged/UPSTREAM.md)
+- [ADR-006 — Daemon service lifecycle](adr/006-daemon-lifecycle.md) — session-scope vs daemon-scope
+- [ADR-007 — LOC cap + composition discipline](adr/007-loc-cap-composition.md) — 1200 LOC, two-sided rule
 
 ## Reference (immutable upstream snapshots)
 

@@ -373,7 +373,22 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
   <code>doc/fixes/24_*</code> + <code>25_*</code> for the final blockers traced and resolved.
 </div>
 
-<h2>9. File Map</h2>
+<h2>9. ADRs — Clean Unified</h2>
+
+<p style="color:#8b949e">Seven active ADRs, one decision each. No amendments, no supersessions. Previous iterative ADRs archived in <code>doc/adr_iterative_backup/</code>. See <code>doc/adr/README.md</code> for full index.</p>
+
+<table>
+<tr><th>#</th><th>Decision</th><th>Answers</th></tr>
+<tr><td class="good">001</td><td>Domain + 3-layer architecture + Protocol 2</td><td>Why does ruflo exist? How do we decide what to wire?</td></tr>
+<tr><td class="good">002</td><td>Learning cycle — 7 phases × 3 loops</td><td>What are the phases and how do they map to code?</td></tr>
+<tr><td class="good">003</td><td>Memory persistence — 5 layers + graceful degradation</td><td>Where is state stored? What happens when layers fail?</td></tr>
+<tr><td class="good">004</td><td>REFINE phase deferred</td><td>Why isn't MinCut/GNN wired? When would we reconsider?</td></tr>
+<tr><td class="good">005</td><td>Vendor NAPI overlay pattern</td><td>How do we extend upstream without forking? (4 patches)</td></tr>
+<tr><td class="good">006</td><td>Daemon service lifecycle</td><td>How does the daemon survive across sessions without bugs?</td></tr>
+<tr><td class="good">007</td><td>LOC cap + composition discipline</td><td>How do we prevent reinvention while allowing composition?</td></tr>
+</table>
+
+<h2>10. File Map</h2>
 
 <pre>
 rufloV3_bootstrap_v5/
@@ -392,7 +407,10 @@ rufloV3_bootstrap_v5/
 │   ├── @ruvector/sona/         — sona NAPI (model_route, saveState, etc.)
 │   └── @ruvector/ruvllm-native/ — ruvllm NAPI (VerdictAnalyzer) + src/ for reproducibility
 ├── doc/
-│   ├── fixes/16-25             — fix documentation
+│   ├── adr/                    — 7 clean unified ADRs
+│   ├── adr_iterative_backup/   — archived iterative ADRs
+│   ├── fixes_merged/           — UPSTREAM.md + IMPLEMENTATION.md (canonical)
+│   ├── fixes/                  — 25 iterative fix docs (archaeology)
 │   ├── audit/                  — e2e audit results
 │   ├── LEARNING_SYSTEM_100.md  — post Sprint 0 roadmap
 │   ├── SPRINT_0_ROOT_CAUSES.md — protocol 2 + 10xwhy (v2 corrected)
@@ -400,7 +418,7 @@ rufloV3_bootstrap_v5/
 └── package.json                — deps: @ruvector/*, @claude-flow/*, @xenova/*
 </pre>
 
-<h2>10. Actual status [2026-04-19]</h2>
+<h2>11. Actual status [2026-04-19]</h2>
 
 <div style="text-align:center; margin: 20px 0;">
   <div class="kpi"><span class="value good">25</span><span class="label">Fixes applied</span></div>
