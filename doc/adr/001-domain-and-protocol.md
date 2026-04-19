@@ -60,7 +60,7 @@ L2 must stay thin. L3 does the thinking.
 
 Before committing to a component choice or making an architectural claim, research in this order:
 
-1. **foxref** — `doc/reference/foxref/*` — authoritative architecture transcripts
+1. **foxref** — `doc/support_tools/foxref/*` — authoritative architecture transcripts
 2. **pi-brain** — `brain_search` with α≥2 quality filter — collective knowledge
 3. **gitnexus** — `query`, `context`, `impact` — code-graph navigation
 4. **ruvector-catalog** — capability-to-crate map

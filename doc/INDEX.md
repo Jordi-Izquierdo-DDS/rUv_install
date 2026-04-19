@@ -72,18 +72,18 @@ See [adr/README.md](adr/README.md) for full index + reading order. Previous iter
 ## Reference (immutable upstream snapshots)
 
 ### Master guide
-- [foxref-architecture-guide.md](reference/foxref-architecture-guide.md) — foxRef × gitnexus × π-brain cross-reference
+- [foxref-architecture-guide.md](support_tools/foxref/foxref-architecture-guide.md) — foxRef × gitnexus × π-brain cross-reference
 
 ### Supporting
-- [ruvector-crate-mapping.md](reference/ruvector-crate-mapping.md) — per-crate ownership
+- [ruvector-crate-mapping.md](support_tools/foxref/ruvector-crate-mapping.md) — per-crate ownership
 - [visual-summary_v5.html](../visual-summary_v5.html) — v5 cycle diagram (replaces v4 Phase3 proposal)
 
 ### Upstream foxRef (source of truth)
-- [ADR-078-ruflo-v3.5.51-ruvector-integration.md](reference/foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md) — the integration ADR
-- [ruvector-architecture-part01.md](reference/foxref/ruvector-architecture-part01.md)
-- [ruvector-architecture-part02.md](reference/foxref/ruvector-architecture-part02.md)
-- [FOXREF-CROSS-REPO-ANALYSIS.md](reference/foxref/FOXREF-CROSS-REPO-ANALYSIS.md)
-- [bootstrap-ruflo-ruvector.sh](reference/foxref/bootstrap-ruflo-ruvector.sh) — upstream validation checklist
+- [ADR-078-ruflo-v3.5.51-ruvector-integration.md](support_tools/foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md) — the integration ADR
+- [ruvector-architecture-part01.md](support_tools/foxref/ruvector-architecture-part01.md)
+- [ruvector-architecture-part02.md](support_tools/foxref/ruvector-architecture-part02.md)
+- [FOXREF-CROSS-REPO-ANALYSIS.md](support_tools/foxref/FOXREF-CROSS-REPO-ANALYSIS.md)
+- [bootstrap-ruflo-ruvector.sh](support_tools/foxref/bootstrap-ruflo-ruvector.sh) — upstream validation checklist
 
 ## How to use these
 

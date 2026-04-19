@@ -266,7 +266,7 @@ claude mcp remove pi-brain    # if you only used pi-brain via this target
 | Current sprint state, deferrals, re-open triggers | `doc/TODO-v5.md` |
 | Architecture decisions with rationale | `doc/adr/*.md` |
 | 7-phase live status | `visual-summary_v5.html` (at repo root) |
-| foxref transcripts (source of architectural truth) | `doc/reference/foxref/` |
+| foxref transcripts (source of architectural truth) | `doc/support_tools/foxref/` |
 | v4 implementation plan history | `zz_archive/implementation-plan/` |
 | Reusable feedback rules | `memory/*.md` + `~/.claude/projects/-mnt-data-dev-rufloV3-bootstrap-v4/memory/` |
 

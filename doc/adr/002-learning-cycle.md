@@ -1,7 +1,7 @@
 # ADR-002 — Learning Cycle: 7 Phases × 3 Loops
 
 **Status:** Active
-**Related:** ADR-001 (domain), ADR-004 (REFINE deferred), `doc/reference/foxref/` (authoritative architecture)
+**Related:** ADR-001 (domain), ADR-004 (REFINE deferred), `doc/support_tools/foxref/` (authoritative architecture)
 
 ---
 

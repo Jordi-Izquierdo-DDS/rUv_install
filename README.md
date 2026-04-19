@@ -156,5 +156,5 @@ cd /path/to/project && bash scripts/verify.sh    # 25 gates
 - `doc/fixes/UPSTREAM.md` — 4 upstream patches (U1-U4)
 - `doc/fixes/IMPLEMENTATION.md` — 10 implementation concerns (I1-I10)
 - `doc/audit/` — e2e audit trail
-- `doc/reference/foxref/` — upstream architecture transcripts
+- `doc/support_tools/foxref/` — upstream architecture transcripts
 - `zz_archive/` — iterative backups + v3/v4 legacy

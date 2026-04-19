@@ -43,8 +43,8 @@ check "ruvector-attention" bash -c 'node -e "const a = require(\"@ruvector/atten
 echo "==> gate 7: required files exist"
 check "file-hook-handler" test -f .claude/helpers/hook-handler.cjs
 check "file-daemon"       test -f .claude/helpers/ruvector-daemon.mjs
-check "file-adr-001"      test -f doc/adr/001-memory-graceful-degradation.md
-check "file-guide"        test -f doc/reference/foxref-architecture-guide.md
+check "file-adr-001"      test -f doc/adr/001-domain-and-protocol.md
+check "file-guide"        test -f doc/support_tools/foxref/foxref-architecture-guide.md
 
 echo "==> gate 8: C4 memory layer wired per ADR-001 (better-sqlite3 tier)"
 check "mem-dep"           bash -c 'grep -q "\"@claude-flow/memory\"" package.json'
