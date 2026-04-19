@@ -1,7 +1,7 @@
 # ADR-005 — Vendor NAPI Overlay Pattern
 
 **Status:** Active
-**Related:** ADR-001 (no invention — these close UPSTREAM gaps, not invent), `doc/fixes_merged/UPSTREAM.md` (the 4 patches in detail)
+**Related:** ADR-001 (no invention — these close UPSTREAM gaps, not invent), `doc/fixes/UPSTREAM.md` (the 4 patches in detail)
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## 2. The 4 patches (currently maintained)
 
-See `doc/fixes_merged/UPSTREAM.md` for file:line detail. Summary:
+See `doc/fixes/UPSTREAM.md` for file:line detail. Summary:
 
 | # | Patch | Crate | Type | LOC | PR candidate? |
 |---|---|---|---|---|---|

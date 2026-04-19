@@ -1,6 +1,6 @@
 # Claude Code Configuration — ruflo v5
 
-> **Identity:** v5 is a **thin adapter** over `@ruvector/*` + `@claude-flow/memory` + `@xenova/transformers`. All learning intelligence lives upstream. Ruflo's JS is glue: routing, observability, lifecycle. Two vendor NAPI rebuilds (sona + ruvllm) close upstream surface gaps — see ADR-005 + `doc/fixes_merged/UPSTREAM.md`.
+> **Identity:** v5 is a **thin adapter** over `@ruvector/*` + `@claude-flow/memory` + `@xenova/transformers`. All learning intelligence lives upstream. Ruflo's JS is glue: routing, observability, lifecycle. Two vendor NAPI rebuilds (sona + ruvllm) close upstream surface gaps — see ADR-005 + `doc/fixes/UPSTREAM.md`.
 
 ---
 
@@ -8,7 +8,7 @@
 
 1. **`visual-summary_v5.html`** — interactive status dashboard (open in browser). KPIs + cycle diagram + ADRs + current state.
 2. **`doc/adr/README.md`** — 7 clean ADRs, one decision each. No amendments, no supersessions.
-3. **`doc/fixes_merged/README.md`** — final clean fix list (upstream patches + implementation concerns).
+3. **`doc/fixes/README.md`** — final clean fix list (upstream patches + implementation concerns).
 4. **`doc/TODO-v5.md`** — honest next steps.
 5. **`README.md`** — v5 overview + install instructions.
 
@@ -58,7 +58,7 @@ rufloV3_bootstrap_v5/
 ├── tests/                       — smoke tests
 ├── doc/
 │   ├── adr/                     — 7 clean unified ADRs
-│   ├── fixes_merged/            — UPSTREAM.md + IMPLEMENTATION.md (canonical)
+│   ├── fixes/                  — UPSTREAM.md + IMPLEMENTATION.md (canonical)
 │   ├── audit/                   — e2e audit results
 │   ├── reference/               — foxref + ruvector-crate-mapping
 │   ├── support_tools/           — gitnexus + pi-brain + ruvector-catalog guides
@@ -148,7 +148,7 @@ Rules:
 - Fix 24: EWC param_count alignment (upstream bug — was silently no-op)
 - Fix 25: removed tick() churn (trajectory-drop fix)
 - 7 clean ADRs replace iterative ADR 000-008 (previous archived in `zz_archive/adr_iterative_backup/`)
-- `doc/fixes_merged/` replaces 25-file iterative fix log (previous archived in `zz_archive/fixes_iterative/`)
+- `doc/fixes/` replaces 25-file iterative fix log (previous archived in `zz_archive/fixes_iterative/`)
 
 ---
 

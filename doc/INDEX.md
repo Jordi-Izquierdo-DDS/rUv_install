@@ -10,40 +10,40 @@
 
 ## Fixes — READ THIS FIRST
 
-- **[fixes_merged/README.md](fixes_merged/README.md)** — final clean list grouped into upstream (4 patches) + implementation (10 concerns). **Start here.**
-- [fixes_merged/UPSTREAM.md](fixes_merged/UPSTREAM.md) — ruvector/ruvllm Rust changes we maintain in our vendor NAPI
-- [fixes_merged/IMPLEMENTATION.md](fixes_merged/IMPLEMENTATION.md) — ruflo daemon + handler + bootstrap
+- **[fixes/README.md](fixes/README.md)** — final clean list grouped into upstream (4 patches) + implementation (10 concerns). **Start here.**
+- [fixes/UPSTREAM.md](fixes/UPSTREAM.md) — ruvector/ruvllm Rust changes we maintain in our vendor NAPI
+- [fixes/IMPLEMENTATION.md](fixes/IMPLEMENTATION.md) — ruflo daemon + handler + bootstrap
 
 ## All 25 Fixes (iterative log — archaeology)
 
 ### v5 session (2026-04-17/18)
-- [Fix 16 — HNSW vector search](fixes/16_hnsw-vector-search-fix.md) — built, tested, removed (superseded by Fix 17)
-- [Fix 17 — Self-learning loop closure](fixes/17_self-learning-loop-closure.md) — model_route NAPI + quality-aware boost
-- [Fix 18 — ruvllm NAPI: VerdictAnalyzer](fixes/18_ruvllm-napi-verdictanalyzer.md) — new vendor binary, root cause analysis
-- [Fix 19 — Gradient quality](fixes/19_gradient-quality-fix.md) — VerdictAnalyzer binary→gradient, tensorCompress export
-- [Fix 20 — Wiring root causes](fixes/20_wiring-root-causes.md) — ONNX prototype patch, classifyChange args+filePaths, TC data feed
-- [Fix 21 — findPatterns telemetry](fixes/21_findpatterns-telemetry.md) — daemon log per retrieval (hits, top-1 route + quality)
-- [Fix 22 — rbank record_usage](fixes/22_rbank-record-usage.md) — explicit feedback loop closed (upstream PatternStore::record_usage exposed via NAPI + daemon wiring)
-- [Fix 23 — EWC stats visibility](fixes/23_ewc-stats-visibility.md) — ewc_stats() NAPI: samples_seen + task_count + remaining_to_detection
-- [Fix 24 — EWC param_count alignment](fixes/24_ewc-param-count-alignment.md) — upstream dim mismatch (6144 vs 384) made update_fisher silent no-op; now uses config.embedding_dim
-- [Fix 25 — Remove tick(), trust forceLearn](fixes/25_remove-tick-trust-forcelearn.md) — trajectory-drop fix: tick() after 1hr uptime drained buffer into run_cycle(force=false) which discarded small batches
+- [Fix 16 — HNSW vector search](../zz_archive/fixes_iterative/16_hnsw-vector-search-fix.md) — built, tested, removed (superseded by Fix 17)
+- [Fix 17 — Self-learning loop closure](../zz_archive/fixes_iterative/17_self-learning-loop-closure.md) — model_route NAPI + quality-aware boost
+- [Fix 18 — ruvllm NAPI: VerdictAnalyzer](../zz_archive/fixes_iterative/18_ruvllm-napi-verdictanalyzer.md) — new vendor binary, root cause analysis
+- [Fix 19 — Gradient quality](../zz_archive/fixes_iterative/19_gradient-quality-fix.md) — VerdictAnalyzer binary→gradient, tensorCompress export
+- [Fix 20 — Wiring root causes](../zz_archive/fixes_iterative/20_wiring-root-causes.md) — ONNX prototype patch, classifyChange args+filePaths, TC data feed
+- [Fix 21 — findPatterns telemetry](../zz_archive/fixes_iterative/21_findpatterns-telemetry.md) — daemon log per retrieval (hits, top-1 route + quality)
+- [Fix 22 — rbank record_usage](../zz_archive/fixes_iterative/22_rbank-record-usage.md) — explicit feedback loop closed (upstream PatternStore::record_usage exposed via NAPI + daemon wiring)
+- [Fix 23 — EWC stats visibility](../zz_archive/fixes_iterative/23_ewc-stats-visibility.md) — ewc_stats() NAPI: samples_seen + task_count + remaining_to_detection
+- [Fix 24 — EWC param_count alignment](../zz_archive/fixes_iterative/24_ewc-param-count-alignment.md) — upstream dim mismatch (6144 vs 384) made update_fisher silent no-op; now uses config.embedding_dim
+- [Fix 25 — Remove tick(), trust forceLearn](../zz_archive/fixes_iterative/25_remove-tick-trust-forcelearn.md) — trajectory-drop fix: tick() after 1hr uptime drained buffer into run_cycle(force=false) which discarded small batches
 
 ### v4 lean daemon session (2026-04-16/17, RFV3_v0_test_init)
-- [Fix 01 — Bridge pretrain→intelligence](fixes/01_bridge-pretrain-to-intelligence.md) — connected Q-learning to PageRank
-- [Fix 02 — Stuart-pattern CLI direct hooks](fixes/02_stuart-pattern-cli-direct-hooks.md) — Ask-Ruvnet survey
-- [Fix 03 — Daemon spawn leak](fixes/03_daemon-spawn-leak.md) — 207 zombies → 1 process
-- [Fix 04 — Activate SONA learning](fixes/04_activate-sona-learning.md) — forceLearn+tick
-- [Fix 05 — InfoNCE NAPI bug](fixes/05_infonce-napi-bug-root-cause.md) — TypedArray crash, JS clone
-- [Fix 06 — CLI process hang](fixes/06_cli-process-hang-not-onnx.md) — dangling handle, not ONNX
-- [Fix 07 — Daemon as MCP tool bridge](fixes/07_daemon-as-mcp-tool-bridge.md) — 2s→60ms warm
-- [Fix 08 — Warm ONNX singleton](fixes/08_warm-onnx-singleton-in-daemon.md) — hash→ONNX
-- [Fix 09 — Bypass broken NAPI packages](fixes/09_bypass-broken-ruvector-napi-packages.md) — 4 packages bypassed
-- [Fix 10 — SONA findPatterns gap](fixes/10_sona-findpatterns-napi-gap.md) — §2 protocol, ruvllm option
-- [Fix 11 — ruvllm learning loop closed](fixes/11_ruvllm-learning-loop-closed.md) — [] → matches
-- [Fix 12 — Learned patterns boost routing](fixes/12_learned-patterns-boost-routing.md) — informative → decisive
-- [Fix 13 — Persistent learning](fixes/13_persistent-learning-cross-session.md) — in-memory → disk
-- [Fix 14 — Singleton + threshold + EWC](fixes/14_race-threshold-ewc.md) — self-protect + config
-- [Fix 15 — Post-action feedback](fixes/15_post-action-feedback.md) — success/fail → pattern usage
+- [Fix 01 — Bridge pretrain→intelligence](../zz_archive/fixes_iterative/01_bridge-pretrain-to-intelligence.md) — connected Q-learning to PageRank
+- [Fix 02 — Stuart-pattern CLI direct hooks](../zz_archive/fixes_iterative/02_stuart-pattern-cli-direct-hooks.md) — Ask-Ruvnet survey
+- [Fix 03 — Daemon spawn leak](../zz_archive/fixes_iterative/03_daemon-spawn-leak.md) — 207 zombies → 1 process
+- [Fix 04 — Activate SONA learning](../zz_archive/fixes_iterative/04_activate-sona-learning.md) — forceLearn+tick
+- [Fix 05 — InfoNCE NAPI bug](../zz_archive/fixes_iterative/05_infonce-napi-bug-root-cause.md) — TypedArray crash, JS clone
+- [Fix 06 — CLI process hang](../zz_archive/fixes_iterative/06_cli-process-hang-not-onnx.md) — dangling handle, not ONNX
+- [Fix 07 — Daemon as MCP tool bridge](../zz_archive/fixes_iterative/07_daemon-as-mcp-tool-bridge.md) — 2s→60ms warm
+- [Fix 08 — Warm ONNX singleton](../zz_archive/fixes_iterative/08_warm-onnx-singleton-in-daemon.md) — hash→ONNX
+- [Fix 09 — Bypass broken NAPI packages](../zz_archive/fixes_iterative/09_bypass-broken-ruvector-napi-packages.md) — 4 packages bypassed
+- [Fix 10 — SONA findPatterns gap](../zz_archive/fixes_iterative/10_sona-findpatterns-napi-gap.md) — §2 protocol, ruvllm option
+- [Fix 11 — ruvllm learning loop closed](../zz_archive/fixes_iterative/11_ruvllm-learning-loop-closed.md) — [] → matches
+- [Fix 12 — Learned patterns boost routing](../zz_archive/fixes_iterative/12_learned-patterns-boost-routing.md) — informative → decisive
+- [Fix 13 — Persistent learning](../zz_archive/fixes_iterative/13_persistent-learning-cross-session.md) — in-memory → disk
+- [Fix 14 — Singleton + threshold + EWC](../zz_archive/fixes_iterative/14_race-threshold-ewc.md) — self-protect + config
+- [Fix 15 — Post-action feedback](../zz_archive/fixes_iterative/15_post-action-feedback.md) — success/fail → pattern usage
 
 ## Audits
 
@@ -65,7 +65,7 @@ See [adr/README.md](adr/README.md) for full index + reading order. Previous iter
 - [ADR-002 — Learning cycle](adr/002-learning-cycle.md) — 7 phases × 3 loops, foxref-aligned
 - [ADR-003 — Memory persistence](adr/003-memory-persistence.md) — 5 layers + graceful degradation
 - [ADR-004 — REFINE deferred](adr/004-refine-deferred.md) — MinCut/GNN re-open triggers
-- [ADR-005 — Vendor NAPI overlay](adr/005-vendor-napi-overlay.md) — 4 upstream patches (see fixes_merged/UPSTREAM.md)
+- [ADR-005 — Vendor NAPI overlay](adr/005-vendor-napi-overlay.md) — 4 upstream patches (see fixes/UPSTREAM.md)
 - [ADR-006 — Daemon service lifecycle](adr/006-daemon-lifecycle.md) — session-scope vs daemon-scope
 - [ADR-007 — LOC cap + composition discipline](adr/007-loc-cap-composition.md) — 1200 LOC, two-sided rule
 

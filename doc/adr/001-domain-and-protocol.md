@@ -90,6 +90,6 @@ Protocol 2 is why we found the EWC param_count bug (ADR-005 U2), why we rejected
 - Vendor NAPI overlay mechanics → ADR-005
 - Daemon lifecycle → ADR-006
 - LOC cap mechanics → ADR-007
-- Individual fix details → `doc/fixes_merged/`
+- Individual fix details → `doc/fixes/`
 
 This ADR is the frame. Everything else is scoped inside it.

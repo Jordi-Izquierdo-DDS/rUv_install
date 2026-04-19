@@ -153,8 +153,8 @@ cd /path/to/project && bash scripts/verify.sh    # 25 gates
 
 - `visual-summary_v5.html` — interactive status dashboard (at repo root)
 - `doc/adr/` — 7 clean ADRs
-- `doc/fixes_merged/UPSTREAM.md` — 4 upstream patches (U1-U4)
-- `doc/fixes_merged/IMPLEMENTATION.md` — 10 implementation concerns (I1-I10)
+- `doc/fixes/UPSTREAM.md` — 4 upstream patches (U1-U4)
+- `doc/fixes/IMPLEMENTATION.md` — 10 implementation concerns (I1-I10)
 - `doc/audit/` — e2e audit trail
 - `doc/reference/foxref/` — upstream architecture transcripts
 - `zz_archive/` — iterative backups + v3/v4 legacy

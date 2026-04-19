@@ -84,6 +84,6 @@ The 7-phase model is a semantic map, not a timeline. A single user prompt trigge
 
 ## 5. Degradation
 
-Each phase has a fallback path documented in the handler comments. See `doc/fixes_merged/IMPLEMENTATION.md` I3 (routing chain: SR → cosine → hash) and the degradation section of the visual summary.
+Each phase has a fallback path documented in the handler comments. See `doc/fixes/IMPLEMENTATION.md` I3 (routing chain: SR → cosine → hash) and the degradation section of the visual summary.
 
 **Learning quality degrades, availability does not.** If every upstream service fails, Claude Code still works — hooks just pass through.
