@@ -25,3 +25,6 @@ ruvector.db
 .env
 .env.*
 !.env.pi-key.example
+
+# Archived historical docs — kept locally, not pushed
+zz_archive/
