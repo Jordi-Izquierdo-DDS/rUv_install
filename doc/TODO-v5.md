@@ -36,19 +36,24 @@
 - [x] NEXT_SESSION_02: trajectories.js — real C4-backed trajectory/session/rewards endpoints
 - [x] NEXT_SESSION_03: step drill-down from JSONL transcripts (viz reads Claude Code's tool_use events)
 
-## 🎯 What's next to reach 100%
+## 🎯 Status — substantially complete
 
-**See `doc/LEARNING_SYSTEM_100.md` + `doc/SPRINT_0_ROOT_CAUSES.md` for full roadmap.**
+**See `doc/LEARNING_SYSTEM_100.md` (post Sprint 0 revision) + `doc/SPRINT_0_ROOT_CAUSES.md`.**
 
 ### Sprint 0 — DONE (2026-04-19)
 - [x] Fix 21: findPatterns telemetry in daemon log (+4 LOC)
 - [x] Fix 22: rbank record_usage — upstream + NAPI + daemon wiring (closed feedback loop)
 - [x] Fix 23: EWC stats visible — samples_seen progress toward 50-sample gate
 
-### Remaining
-- **sona access_count:** upstream design doesn't track retrieval access — leave vestigial
-- **Rbank/C4 count mismatch:** investigate rbank internal pruning (12 vs 19)
-- **Sprint 1:** session-over-session improvement metric script
+### Sprints 1/2/3 — RETIRED
+- Sprint 1 Fix 21 → done in Sprint 0
+- Sprint 2 EWC investigation → resolved by Protocol 2 analysis (correct upstream gate, not a bug)
+- Sprint 3 sona access_count rebuild → rejected (not an upstream retrieval metric; ruvllm.recordUsage is the correct feedback signal, already live)
+
+### Actually remaining
+- **`scripts/improvement-metric.mjs`** — optional ~100 LOC standalone script for session-over-session trend
+- **Run real sessions** — Fix 22/23 need data to show numbers (not engineering work)
+- **Rbank/C4 mismatch investigation** (12 vs 19) — low priority, non-blocking
 
 ## 🔧 Must fix (P0/P1)
 
