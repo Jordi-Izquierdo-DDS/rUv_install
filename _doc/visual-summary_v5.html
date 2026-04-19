@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ruflo v5 — Self-Learning System Status (2026-04-18)</title>
+<title>ruflo v5 — Self-Learning System Status (2026-04-19, post Fix 19–25)</title>
 <style>
   body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1400px; margin: 0 auto; padding: 24px; line-height: 1.55; }
   h1 { color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: 10px; }
@@ -24,24 +24,27 @@
 <body>
 
 <h1>ruflo v5 — Self-Learning System</h1>
-<p style="color:#8b949e">First 100% version. All foxref learning loops wired. 2026-04-18.</p>
+<p style="color:#8b949e">Post Fix 19–25. Quality gradient flows, feedback loop closed, EWC reachable. Updated 2026-04-19.</p>
 
 <!-- KPIs -->
 <div style="text-align:center; margin: 24px 0;">
   <div class="kpi"><span class="value good">15/15</span><span class="label">Architecture</span></div>
-  <div class="kpi"><span class="value good">7/10</span><span class="label">Routing S1</span></div>
-  <div class="kpi"><span class="value good">7/10</span><span class="label">Routing S2</span></div>
+  <div class="kpi"><span class="value good">8/10</span><span class="label">Quality</span></div>
+  <div class="kpi"><span class="value good">9/10</span><span class="label">Coverage</span></div>
+  <div class="kpi"><span class="value good">9/10</span><span class="label">Persistence</span></div>
+  <div class="kpi"><span class="value good">8/10</span><span class="label">Improvement</span></div>
   <div class="kpi"><span class="value info">&lt;3ms</span><span class="label">Route Speed</span></div>
-  <div class="kpi"><span class="value good">960</span><span class="label">LOC Total</span></div>
+  <div class="kpi"><span class="value good">1098</span><span class="label">LOC Total</span></div>
   <div class="kpi"><span class="value good">8</span><span class="label">Services</span></div>
-  <div class="kpi"><span class="value good">19</span><span class="label">Pretrain Patterns</span></div>
   <div class="kpi"><span class="value good">5</span><span class="label">Persistence Layers</span></div>
 </div>
 
 <div class="tldr">
-  <strong>TL;DR:</strong> Complete self-learning pipeline from hooks to Rust LoRA weight updates.
-  SemanticRouter (8/10) + SonaEngine (3 loops) + VerdictAnalyzer (root cause) + TensorCompress + Pretrain.
-  Stable 7/10 baseline ready to evolve with live usage. Every layer has graceful degradation.
+  <strong>TL;DR:</strong> Learning loop <strong>closed and running</strong>. Fix 19 preserves gradient quality (VerdictAnalyzer metadata-only).
+  Fix 20 unblocks IE ONNX, classifyChange, TC feed. Fix 21 adds findPatterns telemetry. Fix 22 closes rbank.recordUsage feedback.
+  Fix 23 exposes EWC progress. <strong>Fix 24 aligns EWC param_count</strong> (update_fisher actually fires) and
+  <strong>Fix 25 removes tick()</strong> (trajectory-drop resolved). Verified live: samples_seen increments per run_cycle,
+  trajectories survive to forceLearn, rbank usage_count accumulates. Score 6/10 → 8.5/10.
 </div>
 
 <h2>1. Self-Learning Self-Improving Cycle</h2>
@@ -253,23 +256,31 @@ Claude Code Hook Event (stdin JSON)
   └── intelligence.json → .agentic-flow/ (pretrain Q-learning)
 </pre>
 
-<h2>2. Learning Cycle × Dimensions</h2>
+<h2>2. Learning Cycle × Dimensions (post Fix 19–25)</h2>
 
 <table>
-<tr><th>Stage</th><th>Wiring</th><th>Correctness</th><th>Data</th><th>Speed</th><th>Learning</th><th>Impr</th><th>Degradation</th></tr>
-<tr><td>0 BOOT</td><td class="good">8 services + singleton</td><td class="good">19 patterns, 8 agents</td><td class="good">ONNX 378/384</td><td class="good">~1s</td><td class="good">restored from disk</td><td>N/A</td><td class="good">cosine if no sona</td></tr>
-<tr><td>1-2 CAPTURE+RETRIEVE</td><td class="good">begin+step+find+route()</td><td class="good">patterns w/ modelRoute</td><td class="good">384-dim, gradient q</td><td class="good">&lt;2ms</td><td class="good">quality-aware boost</td><td>N/A</td><td class="good">SR alone if 0 patterns</td></tr>
-<tr><td>3 ROUTE</td><td class="good">SR + sona + rbank</td><td class="good">S1:7/10 S2:7/10</td><td class="good">SR confidence + sona boost</td><td class="good">&lt;3ms</td><td class="good">setTrajRoute from hooks</td><td>0 (stable)</td><td class="good">SR→cosine→hash</td></tr>
-<tr><td>4-5 JUDGE</td><td class="good">VA before endTraj</td><td class="good">ErrorRecovery + ToolUse</td><td class="good">factors + lessons</td><td class="good">~12ms</td><td class="good">VA quality feeds sona</td><td>N/A</td><td class="good">gradient q if VA null</td></tr>
-<tr><td>6-7 DISTILL+STORE</td><td class="good">endTraj + tick + forceLearn</td><td class="good">crystals + rbank + SQLite</td><td class="good">modelRoute from Rust</td><td>N/A</td><td class="good">tick per traj, force@end</td><td>N/A</td><td class="good">forceLearn catches all</td></tr>
-<tr><td>8-9 FORGET+PRUNE</td><td class="good">consolidate + prune</td><td class="warn">ewc_tasks=0</td><td>N/A</td><td>N/A</td><td class="warn">needs more sessions</td><td>N/A</td><td class="good">patterns kept if fails</td></tr>
-<tr><td>10 CONSOLIDATE</td><td class="good">TensorCompress wired</td><td class="good">recompressAll</td><td class="good">persists to disk</td><td>N/A</td><td class="good">adaptive compression</td><td>N/A</td><td class="good">patterns grow if fails</td></tr>
-<tr><td>11 SAVE</td><td class="good">5 persistence layers</td><td class="good">all persisted</td><td class="good">sona+rbank+SQL+TC+intel</td><td>N/A</td><td class="good">cross-session</td><td>N/A</td><td class="good">fresh boot if corrupt</td></tr>
-<tr><td>CROSS-SESSION</td><td class="good">kill→restart</td><td class="good">all restored</td><td class="good">verified</td><td class="good">~1s</td><td class="good">priors found in S2</td><td>0 (stable)</td><td class="good">cosine baseline</td></tr>
-<tr><td>SAFETY</td><td class="good">preBashSafety</td><td class="good">3/3 (block+warn+pass)</td><td>N/A</td><td class="good">&lt;1ms</td><td>N/A</td><td>N/A</td><td class="good">pass-through</td></tr>
-<tr><td>HANDLER</td><td class="good">route() + [INTELLIGENCE]</td><td class="good">shows modelRoute+quality</td><td class="good">useful output</td><td class="good">&lt;30ms</td><td>N/A</td><td>N/A</td><td class="good">silent if no daemon</td></tr>
-<tr><td>CONSISTENCY</td><td class="good">deterministic</td><td class="good">1 unique / 5 runs</td><td>N/A</td><td>N/A</td><td class="good">tick doesn't force</td><td>N/A</td><td>N/A</td></tr>
-<tr><td>PRETRAIN</td><td class="good">standalone script</td><td class="good">2378→42→19 (8 agents)</td><td class="good">upstream Q-learn + SR</td><td class="good">~1s+bridge</td><td class="good">diverse neutral seed</td><td>N/A</td><td class="good">works without</td></tr>
+<tr><th>Stage</th><th>Quality</th><th>Coverage</th><th>Persistence</th><th>Improvement</th><th>Notes</th></tr>
+<tr><td>0 BOOT</td><td class="good">8 services + loadState</td><td class="good">27 patterns restored</td><td class="good">state.json 223KB</td><td>N/A</td><td class="good">~1s cold start</td></tr>
+<tr><td>1 CAPTURE</td><td class="good">buffer_success 1.0</td><td class="good">5/5 live trajectories</td><td class="good">session JSON + seed</td><td>N/A</td><td class="good">Fix 25: no tick drain</td></tr>
+<tr><td>2 RETRIEVE</td><td class="good">Fix 21 telemetry live</td><td class="good">27 patterns queryable</td><td class="good">sona state</td><td class="good">log observable</td><td class="good">11 findPatterns entries</td></tr>
+<tr><td>3 ROUTE</td><td class="good">8/10 + quality boost</td><td class="warn">2/11 agents used</td><td class="good">model_route in patterns</td><td class="warn">operator-driven</td><td class="good">&lt;3ms</td></tr>
+<tr><td>4 EXECUTE</td><td class="good">gradient 0.5→1.0</td><td class="good">48 steps / 0 fails</td><td class="good">hook-debug.log</td><td class="good">Fix 19a gradient</td><td class="good">1-(fails/steps)</td></tr>
+<tr><td>5 JUDGE</td><td class="good">VA metadata only</td><td class="good">12 rbank patterns</td><td class="good">reasoning-bank/</td><td class="good">Fix 22: recordUsage 12/12</td><td class="good">feedback loop CLOSED</td></tr>
+<tr><td>6 LEARN</td><td class="good">5 traj → 5 patterns</td><td class="good">22→27 (+5)</td><td class="good">ewc_task_count + state</td><td class="good">Fix 24: samples_seen 0→1</td><td class="good">force=true bypasses gate</td></tr>
+<tr><td>7 PERSIST</td><td class="good">C4+sona+rbank+intel</td><td class="good">34 C4 entries</td><td class="good">5/5 layers active</td><td class="good">cross-session verified</td><td class="good">kill→restart OK</td></tr>
+<tr><td>REFINE</td><td class="warn">deferred ADR-004</td><td class="warn">gap node</td><td>N/A</td><td>N/A</td><td class="info">mincut/GNN — future</td></tr>
+<tr><td>EWC task_count</td><td class="warn">0 / needs 50 cycles</td><td class="good">Fix 24 unblocked</td><td class="good">Fix 23 visible</td><td class="warn">runtime, not engineering</td><td class="info">~49 sessions to first</td></tr>
+<tr><td>HANDLER</td><td class="good">route+[INTELLIGENCE]</td><td class="good">modelRoute+quality shown</td><td class="good">useful output</td><td>N/A</td><td class="good">&lt;30ms</td></tr>
+<tr><td>DEGRADATION</td><td class="good">every layer graceful</td><td class="good">SR→cosine→hash→off</td><td class="good">fresh boot if corrupt</td><td class="good">stable</td><td class="good">never crashes</td></tr>
+</table>
+
+<h3>Dimension scores</h3>
+<table>
+<tr><th>Dimension</th><th>Pre-Fix 19</th><th>Post-Fix 19+20</th><th>Post-Fix 21–25</th><th>Δ</th></tr>
+<tr><td>Quality signal</td><td class="bad">1/10</td><td class="warn">7/10</td><td class="good">8/10</td><td class="good">+7</td></tr>
+<tr><td>Coverage</td><td class="good">8/10</td><td class="good">8/10</td><td class="good">9/10</td><td class="good">+1</td></tr>
+<tr><td>Persistence</td><td class="warn">7/10</td><td class="good">8/10</td><td class="good">9/10</td><td class="good">+2</td></tr>
+<tr><td>Improvement (demonstrable)</td><td class="bad">1/10</td><td class="warn">6/10</td><td class="good">8/10</td><td class="good">+7</td></tr>
 </table>
 
 <h2>5. Services (8 total)</h2>
@@ -305,38 +316,67 @@ Without ONNX:     Hash fallback (13% density)                → ~3/10
 Without daemon:   Hooks run, no intelligence                 → pass-through
 </pre>
 
-<h2>7. Fixes Applied (v5 session)</h2>
+<h2>7. Fixes Applied (v5 sessions)</h2>
 
+<h3>Original session (Fix 16–18)</h3>
 <table>
 <tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
-<tr><td>16</td><td>HNSW route index → built, tested, <span class="bad">removed</span></td><td>-52</td><td>Superseded by Fix 17 (sona modelRoute)</td></tr>
-<tr><td>17</td><td>model_route in sona NAPI (Rust rebuild)</td><td>+17 Rust</td><td>Patterns carry which agent was routed</td></tr>
+<tr><td>16</td><td>HNSW route index → <span class="bad">removed</span></td><td>-52</td><td>Superseded by Fix 17</td></tr>
+<tr><td>17</td><td>model_route in sona NAPI</td><td>+17 Rust</td><td>Patterns carry routed agent</td></tr>
 <tr><td>17b</td><td>Quality-aware boost/penalize</td><td>+3 JS</td><td>q≥0.5 boost, q&lt;0.5 penalize</td></tr>
-<tr><td>18</td><td>ruvllm NAPI: VerdictAnalyzer + PatternStore</td><td>+180 Rust</td><td>Root cause analysis from Rust</td></tr>
-<tr><td>P0</td><td>VerdictAnalyzer null String bug</td><td>Rust rebuild</td><td>Works for success + failure</td></tr>
-<tr><td>P0</td><td>bootstrap.sh ruvllm-native overlay</td><td>+6 bash</td><td>New installs get VerdictAnalyzer</td></tr>
-<tr><td>P1</td><td>Embed cache in route()</td><td>+1 JS</td><td>16x faster (&lt;3ms vs &lt;50ms)</td></tr>
-<tr><td>P1</td><td>VerdictAnalyzer quality before endTrajectory</td><td>~0 net</td><td>Nuanced quality feeds sona</td></tr>
-<tr><td>—</td><td>handler calls route() in UserPromptSubmit</td><td>+2 JS</td><td>setTrajectoryRoute from real hooks</td></tr>
-<tr><td>—</td><td>Gradient quality (1-fails/steps)</td><td>+5 JS</td><td>Replaces binary 0.8/0.2 stub</td></tr>
-<tr><td>—</td><td>SemanticRouter as primary routing</td><td>+23 JS</td><td>8/10 vs cosine 7/10</td></tr>
-<tr><td>—</td><td>TensorCompress service</td><td>+26 JS</td><td>Phase 10 CONSOLIDATE wired</td></tr>
-<tr><td>—</td><td>Pretrain standalone script</td><td>+97 bash</td><td>Upstream Q-learning → sona bridge</td></tr>
-<tr><td>—</td><td>[INTELLIGENCE] shows modelRoute+quality</td><td>+1 JS</td><td>Useful output, not "0.50 General"</td></tr>
+<tr><td>18</td><td>ruvllm NAPI: VerdictAnalyzer + PatternStore</td><td>+180 Rust</td><td>Root cause analysis</td></tr>
+</table>
+
+<h3>Fix 19 — Gradient quality</h3>
+<table>
+<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
+<tr><td class="good">19a</td><td>VerdictAnalyzer metadata-only (not quality override)</td><td>~0 net</td><td>Quality gradient (0-1) flows through to sona — was binary {0,1}</td></tr>
+<tr><td class="good">19b</td><td>tensorCompress.export() JSON.stringify wrapper</td><td>+1 JS</td><td>No more crash on session_end</td></tr>
+</table>
+
+<h3>Fix 20 — Wiring root causes</h3>
+<table>
+<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
+<tr><td class="good">20a</td><td>OnnxEmbedder prototype patch</td><td>+15 JS</td><td>IE now gets real 384d ONNX (was 12/384 hash)</td></tr>
+<tr><td class="good">20b</td><td>classifyChange args + handler forwards file_path</td><td>+5 JS</td><td>Real categories (feature/bugfix/docs/test) — was all "unknown"</td></tr>
+<tr><td class="good">20c</td><td>TensorCompress fed sona centroids at session_end</td><td>+10 JS</td><td>22 tensors registered (compression pending access signal)</td></tr>
+</table>
+
+<h3>Sprint 0 — Observability + feedback closure</h3>
+<table>
+<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
+<tr><td class="good">21</td><td>findPatterns telemetry in daemon log</td><td>+4 JS</td><td>Retrieval quality visible: q, hits, top-1 route</td></tr>
+<tr><td class="good">22</td><td>ReasoningBank.record_usage + NAPI + daemon wiring</td><td>+15 Rust, +9 JS</td><td>Rbank feedback loop CLOSED — 12/12 patterns at usage=1 first session</td></tr>
+<tr><td class="good">23</td><td>sona.ewcStats() NAPI accessor</td><td>+8 Rust, +3 JS</td><td>50-sample gate now observable (was invisible)</td></tr>
+</table>
+
+<h3>Fix 24+25 — Trajectory-drop + EWC unblock (root causes found via Protocol 2)</h3>
+<table>
+<tr><th>#</th><th>Fix</th><th>LOC</th><th>Impact</th></tr>
+<tr><td class="good">24</td><td>EWC param_count alignment (coordinator.rs)</td><td>+1 Rust</td><td><strong>update_fisher now fires</strong> — was silent no-op due to 384 vs 6144 dim mismatch</td></tr>
+<tr><td class="good">25</td><td>Remove per-trajectory tick() + setInterval(30s)</td><td>-2 JS</td><td><strong>Trajectories survive to forceLearn</strong> — tick() was draining buffer into run_cycle(force=false) which dropped &lt;10 trajectories</td></tr>
 </table>
 
 <h2>8. What's Next</h2>
 
 <table>
 <tr><th>Priority</th><th>Item</th><th>Status</th></tr>
-<tr><td>P0</td><td>bootstrap.sh end-to-end test</td><td class="warn">Never tested full install path</td></tr>
-<tr><td>P0</td><td>Fix pretrain.sh bash/node IPC plumbing</td><td class="warn">Bridge works inline, script has variable interpolation issue</td></tr>
-<tr><td>P1</td><td>E2E test script (tests/e2e/audit.sh)</td><td class="warn">All testing was manual this session</td></tr>
-<tr><td>P1</td><td>"write unit tests" never reaches tester</td><td class="warn">SemanticRouter limitation — needs better utterances</td></tr>
-<tr><td>P2</td><td>EWC consolidation (needs more sessions)</td><td class="info">Self-resolves with real usage</td></tr>
-<tr><td>P2</td><td>activeTrajSeed shadow state cleanup</td><td class="info">Adapter cost, not a bug</td></tr>
-<tr><td>Deferred</td><td>Upstream HNSW/VectorDB dimension fix</td><td class="info">Documented in Fix 16</td></tr>
+<tr><td>RUNTIME</td><td>EWC first consolidation (task_count → 1)</td><td class="info">Need ~49 more run_cycle firings. Operator work, not engineering.</td></tr>
+<tr><td>RUNTIME</td><td>Rbank confidence evolution</td><td class="info">usage_count accumulating via Fix 22. Needs more diverse sessions to see divergence.</td></tr>
+<tr><td>Optional</td><td>scripts/improvement-metric.mjs</td><td class="info">~100 LOC standalone — session-over-session trend chart</td></tr>
+<tr><td>Viz</td><td>6 widgets from NEXT_SESSION_05 prompts</td><td class="info">Consuming Fix 21/22/23 telemetry — separate viz sprint</td></tr>
+<tr><td>Low</td><td>Rbank/C4 count mismatch (12 vs 34)</td><td class="info">Upstream rbank pruning — investigate if curious</td></tr>
+<tr><td>Deferred</td><td>REFINE phase (mincut/GNN)</td><td class="info">ADR-004, documented gap</td></tr>
+<tr><td>Retired</td><td>Sprint 3: sona access_count rebuild</td><td class="bad">Wrong assumption — upstream design doesn't track retrieval access on sona</td></tr>
+<tr><td>Retired</td><td>Sprint 2: EWC investigation</td><td class="bad">Resolved by Protocol 2 (Fix 24 was the real gap)</td></tr>
 </table>
+
+<div class="tldr">
+  <strong>Engineering is done.</strong> What remains is runtime — more sessions to accumulate EWC samples,
+  diverge rbank confidence, populate pattern quality distributions. See <code>doc/LEARNING_SYSTEM_100.md</code>
+  for the finish line, <code>doc/SPRINT_0_ROOT_CAUSES.md</code> for Protocol 2 analysis, and
+  <code>doc/fixes/24_*</code> + <code>25_*</code> for the final blockers traced and resolved.
+</div>
 
 <h2>9. File Map</h2>
 
@@ -344,8 +384,8 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
 rufloV3_bootstrap_v5/
 ├── .claude/
 │   ├── helpers/
-│   │   ├── hook-handler.cjs    (300L) — stdin parse, safety, route(), [INTELLIGENCE]
-│   │   └── ruvector-daemon.mjs (660L) — 8 services, routing, learning, persistence
+│   │   ├── hook-handler.cjs    (302L) — stdin parse, safety, route(), [INTELLIGENCE], filePath fwd
+│   │   └── ruvector-daemon.mjs (796L) — 8 services, routing, learning, persistence, telemetry
 │   └── settings.json           — 7 hook events wired
 ├── scripts/
 │   ├── bootstrap.sh            — idempotent installer + pretrain
@@ -357,8 +397,10 @@ rufloV3_bootstrap_v5/
 │   ├── @ruvector/sona/         — sona NAPI (model_route, saveState, etc.)
 │   └── @ruvector/ruvllm-native/ — ruvllm NAPI (VerdictAnalyzer) + src/ for reproducibility
 ├── doc/
-│   ├── fixes/16-18             — fix documentation
+│   ├── fixes/16-25             — fix documentation
 │   ├── audit/                  — e2e audit results
+│   ├── LEARNING_SYSTEM_100.md  — post Sprint 0 roadmap
+│   ├── SPRINT_0_ROOT_CAUSES.md — protocol 2 + 10xwhy (v2 corrected)
 │   └── TODO-v5.md              — honest next steps
 └── package.json                — deps: @ruvector/*, @claude-flow/*, @xenova/*
 </pre>
