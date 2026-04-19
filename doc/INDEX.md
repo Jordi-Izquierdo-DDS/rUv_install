@@ -4,6 +4,7 @@
 
 - [README.md](../README.md) — v5 overview, architecture, audit results
 - [TODO-v5.md](TODO-v5.md) — honest next steps with priorities
+- [LEARNING_SYSTEM_100.md](LEARNING_SYSTEM_100.md) — path from 6/10 → 10/10 (4 blockers + sprint plan)
 - [visual-summary_v5.html](../_doc/visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
 
 ## All 18 Fixes
