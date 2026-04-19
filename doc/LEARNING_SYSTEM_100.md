@@ -133,6 +133,15 @@ Blocker 3 and Blocker 4 are cheap (JS daemon + standalone script). Blocker 1 nee
 
 ## Recommended sequence
 
+### Sprint 0 — Root cause unblock (see SPRINT_0_ROOT_CAUSES.md)
+
+**Critical insight from protocol 2 analysis:** all three blockers were misdiagnosed as "needs more data". Two are actually:
+1. **accessCount:** DEAD CODE UPSTREAM — `touch()` method exists in sona but zero callers. Must fix in our vendor rebuild.
+2. **EWC++:** on track but gated at ~4/50 samples — correct upstream behavior, just invisible.
+3. **findPatterns log:** 4-line handler addition.
+
+One Rust rebuild unblocks #1 + #2 telemetry. One 30-min handler edit does #3.
+
 ### Sprint 1: Observability (1-2 days, no upstream)
 1. **Fix 21: findPatterns telemetry** (Blocker 3) — daemon log structured output
 2. **Fix 22: improvement metric script** (Blocker 4) — `scripts/improvement-metric.mjs`
