@@ -1,6 +1,6 @@
 # Fixes — final clean list (merged across v4 + v5 sessions)
 
-**Purpose:** consolidated, non-iterative view of everything that was changed to make ruflo v5 work. Supersedes the `doc/fixes/01-25` iterative log — THIS is the canonical "what's in the system today" reference.
+**Purpose:** consolidated, non-iterative view of everything that was changed to make ruflo v5 work. Supersedes the `zz_archive/fixes_iterative/01-25` iterative log — THIS is the canonical "what's in the system today" reference.
 
 Grouped into two categories so the boundary is clear:
 
@@ -9,13 +9,13 @@ Grouped into two categories so the boundary is clear:
 
 ## Why merge
 
-The iterative log (`doc/fixes/01-25`) shows how we got here. But many entries are fix-of-fix-of-fix (e.g. Fix 04 "activate sona learning" was superseded by Fix 25 "remove tick"). A new reader doesn't care about the journey — they care about the current state.
+The iterative log (`zz_archive/fixes_iterative/01-25`) shows how we got here. But many entries are fix-of-fix-of-fix (e.g. Fix 04 "activate sona learning" was superseded by Fix 25 "remove tick"). A new reader doesn't care about the journey — they care about the current state.
 
 ## Reading order
 
 - **Quick glance:** `UPSTREAM.md` → 4 upstream patches, ~30 LOC Rust total
 - **Integration reference:** `IMPLEMENTATION.md` → 10 implementation concerns, 1098 LOC total
-- **Historical reference:** `../fixes/` — still there, for "why did we do that?" archaeology
+- **Historical reference:** `../../zz_archive/fixes_iterative/` — still there, for "why did we do that?" archaeology
 
 ## Final counts
 

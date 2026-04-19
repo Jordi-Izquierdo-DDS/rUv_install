@@ -1,6 +1,6 @@
 # Architecture Decision Records — ruflo v5 (clean unified)
 
-Seven active ADRs, one decision each. No amendments, no supersessions, no iterative noise. Previous iterative ADRs archived in `doc/adr_iterative_backup/` and `_doc/adr_iterative_backup/` for archaeology.
+Seven active ADRs, one decision each. No amendments, no supersessions, no iterative noise. Previous iterative ADRs archived in `zz_archive/adr_iterative_backup/` for archaeology.
 
 | # | Decision | File |
 |---|---|---|

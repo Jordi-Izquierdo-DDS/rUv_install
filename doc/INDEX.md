@@ -6,7 +6,7 @@
 - [TODO-v5.md](TODO-v5.md) — honest next steps with priorities
 - [LEARNING_SYSTEM_100.md](LEARNING_SYSTEM_100.md) — path from 6/10 → 10/10 (4 blockers + sprint plan)
 - [SPRINT_0_ROOT_CAUSES.md](SPRINT_0_ROOT_CAUSES.md) — protocol 2 + 10xWhy: why 3 mechanisms didn't run
-- [visual-summary_v5.html](../_doc/visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
+- [visual-summary_v5.html](../visual-summary_v5.html) — interactive cycle diagram + Venn + degradation
 
 ## Fixes — READ THIS FIRST
 
@@ -59,7 +59,7 @@
 
 ## ADRs — clean unified (7 active)
 
-See [adr/README.md](adr/README.md) for full index + reading order. Previous iterative ADRs archived in `doc/adr_iterative_backup/` and `_doc/adr_iterative_backup/`.
+See [adr/README.md](adr/README.md) for full index + reading order. Previous iterative ADRs archived in `zz_archive/adr_iterative_backup/`.
 
 - [ADR-001 — Domain + Protocol 2](adr/001-domain-and-protocol.md) — what ruflo is, 3-layer arch, research discipline
 - [ADR-002 — Learning cycle](adr/002-learning-cycle.md) — 7 phases × 3 loops, foxref-aligned
@@ -76,7 +76,7 @@ See [adr/README.md](adr/README.md) for full index + reading order. Previous iter
 
 ### Supporting
 - [ruvector-crate-mapping.md](reference/ruvector-crate-mapping.md) — per-crate ownership
-- [visual-summary_v5.html](../_doc/visual-summary_v5.html) — v5 cycle diagram (replaces v4 Phase3 proposal)
+- [visual-summary_v5.html](../visual-summary_v5.html) — v5 cycle diagram (replaces v4 Phase3 proposal)
 
 ### Upstream foxRef (source of truth)
 - [ADR-078-ruflo-v3.5.51-ruvector-integration.md](reference/foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md) — the integration ADR

@@ -60,7 +60,7 @@ Any single trigger is sufficient. None currently met.
 
 ## 4. What WE DO in the meantime
 
-- Cycle diagram shows REFINE as a grey/dashed gap node (visible in `_doc/visual-summary_v5.html`)
+- Cycle diagram shows REFINE as a grey/dashed gap node (visible in `visual-summary_v5.html` at repo root)
 - Phase 8 in foxref §3.4 documented as deferred
 - Pattern pruning uses `prune_patterns(min_quality, min_accesses, max_age_secs)` — simpler threshold-based alternative that works without graph structure
 

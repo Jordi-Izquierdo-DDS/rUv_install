@@ -151,8 +151,10 @@ cd /path/to/project && bash scripts/verify.sh    # 25 gates
 
 ## References
 
-- `doc/fixes/16_hnsw-vector-search-fix.md` — HNSW analysis + upstream bugs
-- `doc/fixes/17_self-learning-loop-closure.md` — model_route + quality-aware
-- `doc/fixes/18_ruvllm-napi-verdictanalyzer.md` — VerdictAnalyzer NAPI
-- `doc/audit/20260418_audit_v5_fix16_17_18_final.md` — full e2e audit
+- `visual-summary_v5.html` — interactive status dashboard (at repo root)
+- `doc/adr/` — 7 clean ADRs
+- `doc/fixes_merged/UPSTREAM.md` — 4 upstream patches (U1-U4)
+- `doc/fixes_merged/IMPLEMENTATION.md` — 10 implementation concerns (I1-I10)
+- `doc/audit/` — e2e audit trail
 - `doc/reference/foxref/` — upstream architecture transcripts
+- `zz_archive/` — iterative backups + v3/v4 legacy

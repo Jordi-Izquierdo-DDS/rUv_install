@@ -319,7 +319,7 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
 
 <h2>7. Fixes — Final Clean List (merged, not iterative)</h2>
 
-<p style="color:#8b949e">See <code>doc/fixes_merged/</code> for full detail. This is the current state of the system, not the journey. Iterative log (Fix 01–25) archived in <code>doc/fixes/</code>.</p>
+<p style="color:#8b949e">See <code>doc/fixes_merged/</code> for full detail. This is the current state of the system, not the journey. Iterative log (Fix 01–25) archived in <code>zz_archive/fixes_iterative/</code>.</p>
 
 <h3>7a. Upstream fixes — ruvector/ruvllm Rust (maintained in our vendor)</h3>
 <p>Rebuild via <code>scripts/rebuild-sona.sh</code> + <code>scripts/rebuild-ruvllm.sh</code>. All call existing public Rust APIs or fix internal bugs — upstream PR candidates.</p>
@@ -370,12 +370,12 @@ Without daemon:   Hooks run, no intelligence                 → pass-through
   <strong>Engineering is done.</strong> What remains is runtime — more sessions to accumulate EWC samples,
   diverge rbank confidence, populate pattern quality distributions. See <code>doc/LEARNING_SYSTEM_100.md</code>
   for the finish line, <code>doc/SPRINT_0_ROOT_CAUSES.md</code> for Protocol 2 analysis, and
-  <code>doc/fixes/24_*</code> + <code>25_*</code> for the final blockers traced and resolved.
+  <code>doc/fixes_merged/</code> for the final blockers traced and resolved.
 </div>
 
 <h2>9. ADRs — Clean Unified</h2>
 
-<p style="color:#8b949e">Seven active ADRs, one decision each. No amendments, no supersessions. Previous iterative ADRs archived in <code>doc/adr_iterative_backup/</code>. See <code>doc/adr/README.md</code> for full index.</p>
+<p style="color:#8b949e">Seven active ADRs, one decision each. No amendments, no supersessions. Previous iterative ADRs archived in <code>zz_archive/adr_iterative_backup/</code>. See <code>doc/adr/README.md</code> for full index.</p>
 
 <table>
 <tr><th>#</th><th>Decision</th><th>Answers</th></tr>
@@ -408,13 +408,14 @@ rufloV3_bootstrap_v5/
 │   └── @ruvector/ruvllm-native/ — ruvllm NAPI (VerdictAnalyzer) + src/ for reproducibility
 ├── doc/
 │   ├── adr/                    — 7 clean unified ADRs
-│   ├── adr_iterative_backup/   — archived iterative ADRs
 │   ├── fixes_merged/           — UPSTREAM.md + IMPLEMENTATION.md (canonical)
-│   ├── fixes/                  — 25 iterative fix docs (archaeology)
 │   ├── audit/                  — e2e audit results
+│   ├── reference/              — foxref + ruvector-crate-mapping
+│   ├── support_tools/          — gitnexus + pi-brain + ruvector-catalog guides
 │   ├── LEARNING_SYSTEM_100.md  — post Sprint 0 roadmap
 │   ├── SPRINT_0_ROOT_CAUSES.md — protocol 2 + 10xwhy (v2 corrected)
 │   └── TODO-v5.md              — honest next steps
+├── zz_archive/                 — iterative backups (fixes, ADRs, v3/v4 legacy)
 └── package.json                — deps: @ruvector/*, @claude-flow/*, @xenova/*
 </pre>
 
