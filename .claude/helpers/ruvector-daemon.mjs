@@ -559,7 +559,12 @@ const H = {
     if (activeTrajId == null) return { ok: false, error: 'no active trajectory' };
     const id = activeTrajId, seed = activeTrajSeed;
     activeTrajId = null; activeTrajSeed = null;
-    const reward = c.reward ?? 0.5;
+    // Fix 30 (F5): require caller to pass numeric reward. After Fix 29 the only
+    // callers (hook-handler Stop, pretrain Phase B) always pass an explicit
+    // reward. Silently defaulting to 0.5 was fabricating signal for any
+    // malformed call instead of surfacing the bug.
+    const reward = c.reward;
+    if (typeof reward !== 'number') return { ok: false, error: 'end_trajectory requires numeric reward' };
 
     // P1: VerdictAnalyzer FIRST — get nuanced quality before feeding SonaEngine.
     let verdict = null;
@@ -602,16 +607,19 @@ const H = {
       catch (e) { log('substrate.coherence.observe: ' + e.message); }
     }
 
-    // Tier 2: classify trajectory using upstream ruvector.classifyChange (real classifier returning
-    //   feature/bugfix/refactor/docs/test/config/unknown). Output → MemoryEntry tags as
-    //   DQ-03 partial workaround. Pre-existing C4 tags contract; zero invention.
-    // Fix 20b: classifyChange(diff, message) — diff = file paths for extension matching,
-    // message = user prompt for keyword matching. Was (prompt, '') — args swapped, no diff data.
-    let category = 'unknown';
-    if (rvHelpers?.classifyChange && seed?.prompt) {
+    // Tier 2: classify code-change trajectories using upstream ruvector.classifyChange
+    //   (keyword regex over diff file extensions + commit-style message keywords, returns
+    //   one of: bugfix|feature|refactor|docs|test|config|unknown).
+    // Fix 27: upstream's final fallback is literally `return 'unknown'` — so calling it on
+    //   Q&A trajectories without filePaths reliably produces 'unknown' and poisons the
+    //   category signal. Only call classifyChange when we actually have diff data.
+    //   No filePaths → no code change → category stays null (no category tag).
+    let category = null;
+    const hasDiff = Array.isArray(seed?.filePaths) && seed.filePaths.length > 0;
+    if (hasDiff && rvHelpers?.classifyChange && seed?.prompt) {
       try {
-        const diff = (seed?.filePaths || []).join('\n');
-        category = rvHelpers.classifyChange(diff, seed.prompt) || 'unknown';
+        const diff = seed.filePaths.join('\n');
+        category = rvHelpers.classifyChange(diff, seed.prompt);
       } catch (e) { log('classifyChange: ' + e.message); }
     }
 
@@ -622,14 +630,19 @@ const H = {
     //   try/catch per feedback_try_catch_observability.md: DB write is a boundary
     //   call; failure must not crash the daemon — log + return structured result.
     let stored = false, storeErr = null;
-    const outcome = quality > 0.6 ? 'positive' : quality < 0.4 ? 'negative' : 'neutral';
+    // Fix 30 (F3): dropped `outcome` tri-state bucket (positive/negative/neutral
+    // with 0.6/0.4 thresholds). Tags had no consumer anywhere in the stack;
+    // the raw `reward` value is already preserved in metadata for any future
+    // consumer that needs it.
     try {
+      const tags = ['trajectory'];
+      if (category) tags.push(`category:${category}`);
       const entry = createDefaultEntry({
         key: `trajectory/${id}`,
         content: seed?.prompt || '',
         type: 'episodic',
         namespace: 'ruflo-v4',
-        tags: ['trajectory', outcome, `category:${category}`],
+        tags,
         metadata: { trajectoryId: id, reward, category, steps: seed?.steps ?? 0, learnStatus, startedAt: seed?.startedAt ?? null },
         accessLevel: 'private',
       });
