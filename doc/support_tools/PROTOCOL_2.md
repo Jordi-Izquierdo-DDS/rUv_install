@@ -2,6 +2,8 @@
 
 Process for making changes to this project without **inventing**. Every fix must pass five checks, and be grounded in at least one of five authoritative sources. Failure mode this was designed to prevent: adding code that fabricates signal (hardcoded defaults, magic thresholds, shadow state trackers, redundant wrappers around upstream functions).
 
+This document lives alongside the reference guides for each source — see sibling files in this directory.
+
 ---
 
 ## Why this exists
@@ -29,40 +31,45 @@ Each source is a filter. Start at 1. If an earlier source answers your question,
 
 ### 1. foxref — authoritative architecture transcripts
 
-Location: `doc/support_tools/foxref/`
-What it is: curated architectural discussions and design intent.
-When to use: questions about **why** upstream is the way it is, or what the upstream design goals were.
+- **Reference guide:** [`./foxref/foxref-architecture-guide.md`](./foxref/foxref-architecture-guide.md)
+- **Primary sources in the same folder:**
+  - [`./foxref/ruvector-architecture-part01.md`](./foxref/ruvector-architecture-part01.md)
+  - [`./foxref/ruvector-architecture-part02.md`](./foxref/ruvector-architecture-part02.md)
+  - [`./foxref/ruvector-crate-mapping.md`](./foxref/ruvector-crate-mapping.md)
+  - [`./foxref/FOXREF-CROSS-REPO-ANALYSIS.md`](./foxref/FOXREF-CROSS-REPO-ANALYSIS.md)
+  - [`./foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md`](./foxref/ADR-078-ruflo-v3.5.51-ruvector-integration.md)
+- **What it is:** curated architectural discussions and design intent for the ruvector/ruflo stack.
+- **When to use:** questions about **why** upstream is the way it is, or what the upstream design goals were. Use before touching any invariant that looks "arbitrary" — it probably isn't.
 
 ### 2. pi-brain — α≥2 quality-scored collective knowledge
 
-Access: MCP tool `mcp__pi-brain__brain_search({query, limit})`
-What it is: ~1500 cross-project memories with Bayesian α-scores (upvotes vs downvotes).
-When to use: "has someone in the rUv ecosystem already solved this pattern?"
-
-Filter rule: prefer α≥2. Cite `id: <uuid>` + α score in decisions.
-
-Scope warning: pi-brain is **cross-project collective**, not this project's state. Don't use it for "what patterns does my current session have" — use sona's own state for that.
+- **Reference guide:** [`./pi-brain INSTALL-AND-USE.md`](<./pi-brain INSTALL-AND-USE.md>)
+- **Access:** MCP tool `mcp__pi-brain__brain_search({query, limit})`.
+- **What it is:** ~1500 cross-project memories with Bayesian α-scores (alpha=upvotes, beta=downvotes).
+- **When to use:** "has someone in the rUv ecosystem already solved this pattern?" — query before you design a new approach.
+- **Filter rule:** prefer α≥2. Cite `id: <uuid>` + α score when committing to a decision informed by pi-brain.
+- **Scope warning:** pi-brain is **cross-project collective**, not this project's state. Don't use it for "what patterns does my current session have" — that's sona's own state.
 
 ### 3. gitnexus — code-graph navigation
 
-Access: MCP tools `gitnexus_query`, `gitnexus_context`, `gitnexus_impact`, `gitnexus_cypher`.
-What it is: BM25 + semantic + structural graph across indexed repos.
-When to use: "where does symbol X get called?" "what breaks if I rename Y?" "what's the execution flow for concept Z?"
-
-Mandatory rule: **before modifying a symbol, run** `gitnexus_impact({target, direction: 'upstream'})`. Warn the user if blast radius is HIGH or CRITICAL before proceeding.
+- **Reference guide:** [`./gitnexus.md`](./gitnexus.md)
+- **Access:** MCP tools `gitnexus_query`, `gitnexus_context`, `gitnexus_impact`, `gitnexus_cypher`, `gitnexus_rename`, `gitnexus_detect_changes`.
+- **What it is:** BM25 + semantic + structural graph across indexed repos. 1-3s lookups replace 15-30min manual grep sessions.
+- **When to use:** "where does symbol X get called?" · "what breaks if I rename Y?" · "what's the execution flow for concept Z?"
+- **Mandatory rule:** before modifying a symbol, run `gitnexus_impact({target, direction: 'upstream'})`. Warn the user if blast radius is HIGH or CRITICAL before proceeding.
 
 ### 4. ruvector-catalog — capability → crate map
 
-Location: `_UPSTREAM_20260308/ruvector-catalog/`
-Access: `bun src/cli.ts search "<query>"` or read `SKILL.md` + `src/catalog/data-cap-defaults.ts`.
-What it is: canonical map of what functionality lives in which crate/npm package/NAPI binding.
-When to use: "does upstream already have X?" before inventing X.
+- **Reference guide:** [`./ruvector-catalog.md`](./ruvector-catalog.md)
+- **Access:** `bun src/cli.ts search "<query>"` at the catalog root, or read `SKILL.md` + `src/catalog/data-cap-defaults.ts` directly.
+- **What it is:** canonical map of what functionality lives in which crate / npm package / NAPI binding.
+- **When to use:** "does upstream already have X?" — before inventing X. This is where U5 would have been caught: `touch()` is listed but we missed it.
 
 ### 5. source — final verification
 
-Location: `_UPSTREAM_20260308/ruvector_GIT_v2.1.2_*/crates/` and `node_modules/` for installed JS.
-What it is: the actual Rust/JS code.
-When to use: **always** as final confirmation. Every commit message that claims an upstream fix should include at least one `file:line` citation pointing at the source being fixed or invoked.
+- **Location:** `_UPSTREAM_20260308/ruvector_GIT_v2.1.2_*/crates/` for Rust; `node_modules/` for installed JS (sona, ruvllm-native, ruvector, agentic-flow).
+- **What it is:** the actual Rust / TypeScript code.
+- **When to use:** **always** as final confirmation. Every commit message that claims an upstream fix should include at least one `file:line` citation pointing at the source being fixed or invoked.
 
 ---
 
@@ -90,18 +97,18 @@ Theoretical purity is not the goal. Working system is. A system that "looks ugli
 
 ### Example 1 — U5: wire orphan `touch()`
 
-Context: `[SONA]` retrieval hints always showed `access=0`, even after repeated findPatterns calls.
+Context: `[SONA]` retrieval hints always showed `access=0`, even after repeated findPatterns calls. See [`../fixes/UPSTREAM.md`](../fixes/UPSTREAM.md) U5 entry.
 
 Without Protocol 2, temptation: add a JS Map in the daemon to track access counts locally, overlay on returned patterns.
 
 With Protocol 2:
 - **Q1 invención?** The JS-Map approach would be invention. Alternative path needs checking first.
-- **Q2 daña learning?** Yes — without access_count, `prune_patterns` keeps noise and evicts useful patterns indiscriminately.
+- **Q2 daña learning?** Yes — without `access_count`, `prune_patterns` keeps noise and evicts useful patterns indiscriminately.
 - **Q3 upstream problem?** Check source: `grep -rn touch` in `crates/sona/src/` → found `LearnedPattern::touch(&mut self)` at `types.rs:313` that bumps `access_count` and `last_accessed`. It is **never called anywhere in the codebase**.
 - **Q4 sitio?** Inside `find_similar` at `reasoning_bank.rs:362` — the single retrieval entry point.
 - **Q5 evidencia?** Session 1 showed 0/94 patterns with access>0 despite 25 findPatterns calls — confirmed.
 
-**Result:** 8-LOC Rust patch that wires the orphan helper. No shadow state. No invention. Ships as a vendor rebuild (U5 in `doc/fixes/UPSTREAM.md`).
+**Result:** 8-LOC Rust patch that wires the orphan helper. No shadow state. No invention. Ships as a vendor rebuild (documented as U5 in [`../fixes/UPSTREAM.md`](../fixes/UPSTREAM.md)).
 
 ### Example 2 — Fix 28: pretrain quality cap
 
@@ -111,7 +118,7 @@ Context: every findPatterns returned the same `python-developer@q1.00` seed.
 - **Q2 daña learning?** Yes — the q=1.00 winner dominated retrieval ranking permanently. Live trajectories from VerdictAnalyzer land at 0.6-0.9 and could never outrank.
 - **Q3 upstream?** No — pretrain bridge is our code. But upstream documents a neutral value: `SonaConfig::default` comment at `crates/sona/src/types.rs` states *"Quality threshold 0.3 balances learning vs noise filtering"*.
 - **Q4 sitio?** `scripts/pretrain.sh` Phase B where we seed trajectories.
-- **Q5 evidencia?** Session 1 pulse check showed the same top-1 route on 25/25 findPatterns calls.
+- **Q5 evidencia?** Session 1 and 2 pulse checks showed the same top-1 route on 25/25 findPatterns calls.
 
 **Result:** single `PRETRAIN_QUALITY = 0.3` constant applied to all pretrain seeds. No differential quality since we have no verdict evidence for any of them. Live data with real VerdictAnalyzer rewards can naturally outrank.
 
@@ -125,7 +132,7 @@ Context: noticed that `IntelligenceEngine.route()` exists upstream and does ever
 - **Q4 sitio?** Daemon route handler.
 - **Q5 evidencia?** **NO.** Never A/B tested IE.route() against our custom path in our context.
 
-**Result: VETO**. Don't refactor a working path without empirical data showing the alternative is better. Parked pending validation experiment.
+**Result: VETO.** Don't refactor a working path without empirical data showing the alternative is better. Parked pending validation experiment.
 
 ---
 
@@ -133,7 +140,7 @@ Context: noticed that `IntelligenceEngine.route()` exists upstream and does ever
 
 ### 1. "grep shows it returns null sometimes, add a default"
 
-Wrong. Read upstream's return type contract. If `fn foo() -> String`, it literally cannot return null — so your `|| 'unknown'` fallback is dead code. Adding it hides the fact that you don't understand the contract.
+Wrong. Read upstream's return type contract first. If `fn foo() -> String`, it literally cannot return null — so your `|| 'unknown'` fallback is dead code. Adding it hides the fact that you don't understand the contract.
 
 ### 2. "defensive fallback just in case"
 
@@ -141,7 +148,7 @@ Fabricates signal. If the caller misuses the API, surface the error (`return { o
 
 ### 3. "this magic number feels right"
 
-Without ablation, feeling is fiction. Either cite an upstream-documented value (e.g., "SonaConfig default"), or document that the value is arbitrary AND unblocking (API requires SOME value).
+Without ablation, feeling is fiction. Either cite an upstream-documented value (e.g., "SonaConfig default 0.3"), or document that the value is arbitrary AND unblocking (API requires SOME value).
 
 ### 4. "refactor to delegate to upstream"
 
@@ -168,13 +175,15 @@ If the author can't produce these for a given change, the change is not ready.
 
 ## Relationship to other project rules
 
-- `feedback_upstream_trust_no_invention.md` → Protocol 2 is the operational implementation of this rule.
-- `feedback_ablate_before_claim_root_cause.md` → Q5 of the framework.
-- `feedback_never_hide_degradation.md` → don't let Q2 (damage assessment) become "minor" just to avoid a fix. Real damage must be stated.
-- `feedback_gitnexus_first.md` → source #3 in the research order.
-- `feedback_decide_and_expand_scope.md` → don't ask the user Q1-Q5 for them; answer yourself, commit, and expand to related sites in the same change when appropriate.
-- `ADR-ruflo-005` → local Rust rebuilds only permitted when Protocol 2 identifies the correct site as "Rust upstream NAPI gap".
-- `ADR-ruflo-007` (LOC cap) → growth must be **composition** of upstream, which Protocol 2 enforces.
+- [`../../memory/feedback_upstream_trust_no_invention.md`](../../memory/feedback_upstream_trust_no_invention.md) — Protocol 2 is the operational implementation of this rule.
+- [`../../memory/feedback_ablate_before_claim_root_cause.md`](../../memory/feedback_ablate_before_claim_root_cause.md) — Q5 of the framework.
+- [`../../memory/feedback_never_hide_degradation.md`](../../memory/feedback_never_hide_degradation.md) — don't let Q2 (damage assessment) become "minor" just to avoid a fix. Real damage must be stated.
+- [`../../memory/feedback_gitnexus_first.md`](../../memory/feedback_gitnexus_first.md) — source #3 in the research order.
+- [`../../memory/feedback_decide_and_expand_scope.md`](../../memory/feedback_decide_and_expand_scope.md) — don't ask the user Q1-Q5 for them; answer yourself, commit, and expand to related sites in the same change when appropriate.
+- [`../adr/005-vendor-napi-overlay.md`](../adr/005-vendor-napi-overlay.md) — local Rust rebuilds only permitted when Protocol 2 identifies the correct site as "Rust upstream NAPI gap".
+- [`../adr/007-loc-cap-composition.md`](../adr/007-loc-cap-composition.md) (LOC cap) — growth must be **composition** of upstream, which Protocol 2 enforces.
+- [`../fixes/UPSTREAM.md`](../fixes/UPSTREAM.md) — registry of Protocol-2-validated upstream patches (U1 … U5 so far).
+- [`../fixes/IMPLEMENTATION.md`](../fixes/IMPLEMENTATION.md) — registry of Protocol-2-validated adapter/hook fixes (I1 … I3 so far).
 
 ---
 
