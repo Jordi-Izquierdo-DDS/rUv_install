@@ -99,13 +99,14 @@ const net = require('net');
   //      with route inferred via upstream getAgentForFile
   //   3. intel.dirPatterns (directory → agent) sampled once per dir
   // All routes come from upstream decisions — zero invention.
-
-  // Pre-compute Q normalization
-  let maxQ = 0;
-  for (const [, agents] of patterns) {
-    for (const q of Object.values(agents)) if (q > maxQ) maxQ = q;
-  }
-  if (maxQ === 0) maxQ = 1;
+  //
+  // Fix 28 (pretrain quality): all seeds get the SAME neutral quality.
+  // Upstream SonaConfig default comment at types.rs cites 0.3 as the value
+  // that balances learning vs noise filtering — only upstream-cited neutral.
+  // Pretrain has NO verdict evidence (Q-table weights are file frequency,
+  // not quality). Live VerdictAnalyzer trajectories land 0.6-0.9 and will
+  // outrank pretrain naturally.
+  const PRETRAIN_QUALITY = 0.3;
 
   // Collect real file samples per extension (git ls-files, fallback to find)
   const { execSync } = require('child_process');
@@ -152,13 +153,12 @@ const net = require('net');
     const ext = state.replace('edit:', '');
     const samples = (filesByExt[ext] || []).map(readSample).filter(Boolean);
     const texts = samples.length > 0 ? samples : [state];
-    const quality = bestAgent[1] / maxQ;
     for (const text of texts) {
       qTotal++;
-      if (await seed(text, bestAgent[0], quality)) qDone++;
+      if (await seed(text, bestAgent[0], PRETRAIN_QUALITY)) qDone++;
     }
   }
-  console.log('  [1] Q-patterns × file samples: '+qDone+'/'+qTotal+' seeded (quality = Q/maxQ)');
+  console.log('  [1] Q-patterns × file samples: '+qDone+'/'+qTotal+' seeded (q='+PRETRAIN_QUALITY+')');
 
   // 2. intel.memories (upstream already read + embedded these)
   let mDone = 0;
@@ -168,9 +168,9 @@ const net = require('net');
     const match = text.match(/^\[([^\]]+)\]/);
     const filename = match ? match[1] : '';
     const agent = filename ? getAgentForFile(filename) : null;
-    if (await seed(text, agent, 0.5)) mDone++;
+    if (await seed(text, agent, PRETRAIN_QUALITY)) mDone++;
   }
-  console.log('  [2] memories (README/CLAUDE/package.json): '+mDone+'/'+mems.length+' seeded');
+  console.log('  [2] memories (README/CLAUDE/package.json): '+mDone+'/'+mems.length+' seeded (q='+PRETRAIN_QUALITY+')');
 
   // 3. dirPatterns × one file sample (skip dirs already covered by Q-patterns)
   let dDone = 0;
@@ -179,9 +179,9 @@ const net = require('net');
     const sample = (filesByDir[dir] || [])[0];
     if (!sample) continue;
     const text = readSample(sample);
-    if (await seed(text, agent, 0.4)) dDone++;
+    if (await seed(text, agent, PRETRAIN_QUALITY)) dDone++;
   }
-  console.log('  [3] dir-patterns × sample file: '+dDone+'/'+dirs.length+' seeded');
+  console.log('  [3] dir-patterns × sample file: '+dDone+'/'+dirs.length+' seeded (q='+PRETRAIN_QUALITY+')');
 
   // Don't forceLearn — let end_trajectory auto-cycle when buffer ≥10.
   // Live sessions add real-quality trajectories; they dominate clusters.
