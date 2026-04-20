@@ -170,10 +170,17 @@ async function dispatch(event, input) {
     case 'UserPromptSubmit':
       if (!prompt) return;
       // Phase 4/5/6/7 tail of previous trajectory if any.
-      // Use gradient quality from previous trajectory's step outcomes.
-      const prevQuality = (sess.stepCount || 0) > 0 ? Math.max(0.1, 1.0 - ((sess.failCount || 0) / sess.stepCount)) : 0.5;
+      // Fix 29: only close previous trajectory when there's real evidence.
+      // 0 steps = user prompt without tool use = NO verdict signal. Fabricating
+      // quality=0.5 pollutes sona with q=0.5 singleton patterns (same class of
+      // sin as pretrain q=1.00 — see Fix 28). Skip end_trajectory entirely;
+      // next begin_trajectory replaces activeTrajId in daemon (auto-orphan
+      // cleanup, sona buffer auto-trims at max_trajectories).
+      if ((sess.stepCount || 0) > 0) {
+        const prevQuality = 1.0 - ((sess.failCount || 0) / sess.stepCount);
+        await sendCommand({ command: 'end_trajectory', reward: prevQuality }, 2000);
+      }
       sess.stepCount = 0; sess.failCount = 0; writeSession(sess);
-      await sendCommand({ command: 'end_trajectory', reward: prevQuality }, 2000);
       // Phase 1 CAPTURE (prompt-level): open new trajectory.
       // Upstream: SonaEngine.beginTrajectory (@ruvector/sona · napi_simple.rs:70).
       await sendCommand({ command: 'begin_trajectory', text: prompt }, 2000);
@@ -257,13 +264,17 @@ async function dispatch(event, input) {
       // trajectory.quality into pattern.avg_quality. We trust upstream's derivation as-is;
       // if the resulting signal is flat, that's upstream's contract given our input, not
       // a ruflo concern to patch around.
-      // Gradient quality from step outcomes (replaces binary 0.8/0.2 stub).
-      // quality = 1 - (failCount / stepCount). No steps = neutral 0.5.
+      // Fix 29: quality from step outcomes when evidence exists. Skip entirely
+      // when steps=0 (pure Q&A with no tool use → no verdict signal → no fake reward).
+      // Also drop the Math.max(0.1, ...) floor — it was pretending a minimum
+      // positive quality when 100% fails genuinely deserves 0.0 (upstream's
+      // quality_threshold filters it from pattern formation, which is correct).
       const steps = sess.stepCount || 0;
-      const fails = sess.failCount || 0;
-      const quality = steps > 0 ? Math.max(0.1, 1.0 - (fails / steps)) : 0.5;
+      if (steps > 0) {
+        const quality = 1.0 - ((sess.failCount || 0) / steps);
+        await sendCommand({ command: 'end_trajectory', reward: quality }, 3000);
+      }
       sess.stepCount = 0; sess.failCount = 0; writeSession(sess);
-      await sendCommand({ command: 'end_trajectory', reward: quality }, 3000);
       return;
 
     // ─── SessionEnd: Phase 8 FORGET, Loop C ─────────────────────────────────
